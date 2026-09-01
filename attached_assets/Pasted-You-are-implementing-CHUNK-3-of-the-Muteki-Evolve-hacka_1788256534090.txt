@@ -1,0 +1,1167 @@
+You are implementing CHUNK 3 of the Muteki-Evolve hackathon project.
+
+Your responsibility is to implement the Strategy Evolution Engine.
+
+This component is responsible for:
+
+Previous Strategy
++
+InvestigationResult
++
+ScoreReport
++
+Strategy History
+↓
+Memory / Review
+↓
+Improved High-Level Strategy
+
+The engine must NOT execute Muteki.
+The engine must NOT execute shell commands.
+The engine must NOT select targets.
+The engine must NOT perform scoring.
+The engine must NOT modify the UI.
+The engine must NOT modify Muteki.
+The engine must NOT modify MTASA.
+
+You are building an independent strategy-learning component that works against the contracts established in:
+
+docs/INTEGRATION_CONTRACT.md
+
+==================================================
+0. STOP CONDITIONS — READ FIRST
+==================================================
+
+Before writing code, know when to halt and report instead of guessing.
+
+STOP and write a clear note in docs/STRATEGY_ENGINE.md (do not guess, do not invent, do not silently work around) if:
+
+1. docs/INTEGRATION_CONTRACT.md does not exist, or app/models/ is missing/empty. Do not recreate the contract from scratch or invent your own version of Strategy/InvestigationResult/ScoreReport. Report that Chunk 1 needs to finish first and stop.
+
+2. The contract exists but is incomplete or marked "Not yet verified" for something this chunk needs (e.g. the real shape of ScoreReport or InvestigationResult). This is not a hard stop — build against whatever is actually there, and note in docs/STRATEGY_ENGINE.md which parts of the Strategy Engine are built against provisional/unverified contracts.
+
+3. Check docs/UPSTREAM_NOTES.md for a "Contract Conflicts" section (a place Chunk 1 documents where the real Muteki/MTASA behavior forced a contract change from what was originally planned). If one exists, the Strategy Engine must be built against the conflict-adjusted contract, not the original assumption — note this explicitly if it changes anything in this chunk.
+
+4. The real project-owned model field names differ from the illustrative examples used throughout this document (Sections 4, 5, 6, 8, 20, 21 all show example shapes — `progress_score`, `evidence_summary`, the memory record fields, etc.). The real model from app/models/ always wins. Do not rename it to match this document; adapt this chunk's code to the actual contract and note the difference if it's non-trivial.
+
+5. The project's existing language/framework conventions are ambiguous or absent (Section 26). Match whatever Chunk 1 already established. If genuinely nothing exists to match, choose something reasonable and state the choice explicitly in docs/STRATEGY_ENGINE.md rather than assuming it silently.
+
+As in Chunks 1 and 2: none of these mean abandon the chunk. Document the real situation, make the smallest safe decision needed to keep moving, and flag it clearly.
+
+==================================================
+1. FIRST — INSPECT THE EXISTING PROJECT
+==================================================
+
+Before writing code:
+
+1. Read docs/INTEGRATION_CONTRACT.md
+2. Read docs/UPSTREAM_NOTES.md (including any "Contract Conflicts" section — see STOP CONDITION 3)
+3. Read docs/SETUP.md
+4. Inspect app/models/
+5. Inspect existing app/strategy/
+6. Inspect tests/
+7. Inspect existing mock InvestigationResult
+8. Inspect existing mock ScoreReport
+9. Inspect the Chunk 1 contracts carefully.
+
+If any of these are missing or incomplete, see STOP CONDITIONS 1–2 in Section 0.
+
+DO NOT create duplicate models if the project already has them.
+
+Use the existing project-owned contracts.
+
+If the existing implementation differs from assumptions in this prompt, trust the frozen project contract and document any discrepancy.
+
+DO NOT redesign the architecture.
+
+==================================================
+2. CORE RESPONSIBILITY
+==================================================
+
+Implement:
+
+Strategy Evolution Engine
+
+Conceptual flow:
+
+Initial Strategy
+↓
+Muteki Investigation
+↓
+InvestigationResult
+↓
+ScoreReport
+↓
+Strategy Memory
+↓
+Teacher / Reviewer
+↓
+Next Strategy
+
+The engine should learn from:
+
+- objective
+- context
+- previous strategy
+- previous score
+- evidence summary
+- progress signals
+- previous strategy history
+- successful directions
+- failed directions
+- stagnation
+
+The engine should generate a HIGH-LEVEL investigation strategy.
+
+==================================================
+3. IMPORTANT ARCHITECTURAL RULE
+==================================================
+
+The Strategy Engine does NOT control execution.
+
+It only creates Strategy objects.
+
+It must NEVER:
+
+- execute commands
+- execute shell commands
+- invoke Muteki
+- invoke workers
+- invoke Docker
+- start containers
+- choose a SandboxTarget
+- modify SandboxTarget
+- modify runtime_reference
+- create arbitrary target URLs
+- create arbitrary external hosts
+- bypass sandbox restrictions
+- perform actual security testing
+
+The Strategy Engine is purely a planning/evolution component.
+
+==================================================
+4. STRATEGY CONTRACT
+==================================================
+
+Use the project-owned Strategy model.
+
+Expected semantic structure (illustrative — the real model in app/models/ is authoritative; see STOP CONDITION 4 if it differs):
+
+{
+    objective: string,
+    priorities: string[],
+    constraints: string[],
+    context: object,
+    revision: number,
+    parent_revision: number | null
+}
+
+DO NOT add a target field.
+
+DO NOT add runtime_reference.
+
+DO NOT allow a generated strategy to select the target.
+
+==================================================
+5. INITIAL STRATEGY GENERATION
+==================================================
+
+Implement an initial strategy generator.
+
+Input should be based on trusted application context.
+
+At minimum support:
+
+- objective
+- priorities
+- constraints
+- context
+
+Example:
+
+{
+    objective: "Investigate the registered sandbox target",
+    priorities: [
+        "reconnaissance",
+        "surface discovery"
+    ],
+    constraints: [
+        "stay within sandbox",
+        "use only the registered target"
+    ],
+    context: {},
+    revision: 1,
+    parent_revision: null
+}
+
+The exact content should depend on the provided objective/context.
+
+The initial strategy must be high-level.
+
+Do NOT generate shell commands.
+
+==================================================
+6. NEXT STRATEGY GENERATION
+==================================================
+
+Implement next-strategy generation.
+
+Input:
+
+previous strategy
++
+InvestigationResult
++
+ScoreReport
++
+strategy history
+
+Output:
+
+new Strategy
+
+The next strategy should consider:
+
+1. Objective
+2. Current context
+3. Previous strategy
+4. Previous score
+5. Progress level
+6. Evidence summary
+7. Progress signals
+8. Successful directions
+9. Failed directions
+10. Previous strategy history
+11. Stagnation
+
+The purpose is to make later strategies meaningfully informed by earlier outcomes.
+
+==================================================
+7. STRATEGY EVOLUTION BEHAVIOR
+==================================================
+
+The engine must NOT simply generate random different text.
+
+Strategy changes must have a reason.
+
+Examples:
+
+If previous strategy focused on reconnaissance and produced useful surface information:
+
+Next strategy may move toward:
+
+- authentication
+- authorization
+- input validation
+- deeper surface analysis
+
+If previous strategy produced strong evidence around authentication:
+
+Next strategy should focus more deeply on authentication-related investigation.
+
+If a direction repeatedly fails:
+
+The next strategy should reduce emphasis on that direction and explore another reasonable direction.
+
+If the system is making progress:
+
+Continue or deepen successful investigation directions.
+
+If progress is weak:
+
+Change investigation direction.
+
+If progress stagnates:
+
+Trigger Teacher/Reviewer behavior.
+
+==================================================
+8. STRATEGY MEMORY
+==================================================
+
+Implement minimal strategy memory.
+
+DO NOT build a complicated database.
+
+Use a simple local in-memory or JSON-backed history depending on the existing project architecture.
+
+Each memory record should contain approximately (illustrative shape — adapt field names to whatever the real contract uses; see STOP CONDITION 4):
+
+{
+    iteration,
+    strategy,
+    score,
+    result_summary,
+    successful_directions,
+    failed_directions
+}
+
+The exact model should remain compatible with the project.
+
+Memory should support:
+
+- adding an iteration
+- retrieving history
+- retrieving latest strategy
+- retrieving latest result
+- retrieving score history
+- identifying repeated failures
+- identifying successful directions
+- identifying stagnation
+
+==================================================
+9. MEMORY EXAMPLE
+==================================================
+
+Example:
+
+Iteration 1
+
+Strategy:
+Focus on reconnaissance and surface discovery
+
+Score:
+20
+
+Result:
+Useful target understanding
+
+Successful directions:
+[
+    "surface discovery"
+]
+
+Failed directions:
+[]
+
+--------------------------------
+
+Iteration 2
+
+Strategy:
+Focus on authentication and authorization
+
+Score:
+60
+
+Result:
+Strong evidence around authentication
+
+Successful directions:
+[
+    "authentication"
+]
+
+Failed directions:
+[
+    "basic enumeration"
+]
+
+--------------------------------
+
+Iteration 3
+
+Strategy:
+Focus on validating authentication findings
+
+Score:
+80
+
+Result:
+Issue reproduced
+
+Successful directions:
+[
+    "authentication",
+    "validation"
+]
+
+Failed directions:
+[
+    "basic enumeration"
+]
+
+The memory must allow the Strategy Engine to understand this progression.
+
+==================================================
+10. TEACHER / REVIEWER
+==================================================
+
+Implement a lightweight Teacher/Reviewer component.
+
+Its responsibility:
+
+Look at the recent history.
+
+Determine:
+
+- what worked
+- what failed
+- what remains unexplored
+- whether progress is happening
+- whether the system is stagnating
+- what strategic change should happen next
+
+The Teacher/Reviewer should NOT execute anything.
+
+It should produce a structured review that the Strategy Generator can consume.
+
+For example:
+
+{
+    "summary": "...",
+    "successful_directions": [],
+    "failed_directions": [],
+    "unexplored_directions": [],
+    "recommendation": "..."
+}
+
+Do not over-engineer this.
+
+The project only needs enough logic to demonstrate meaningful strategy evolution.
+
+==================================================
+11. STAGNATION DETECTION
+==================================================
+
+Implement stagnation handling.
+
+The Strategy Engine should detect situations such as:
+
+- repeated low scores
+- repeated identical outcomes
+- repeated strategies
+- no meaningful new evidence
+- same direction repeatedly failing
+
+Do NOT make stagnation detection dependent on an arbitrary large number of iterations.
+
+Use a small configurable threshold.
+
+Example:
+
+If the last 2–3 iterations show no meaningful progress:
+
+mark:
+
+stagnated = true
+
+Then the Teacher/Reviewer should recommend diversification.
+
+==================================================
+12. STRATEGY DIVERSIFICATION
+==================================================
+
+When stagnation occurs:
+
+DO NOT generate random nonsense.
+
+Instead:
+
+1. Summarize failed directions.
+2. Identify explored directions.
+3. Identify unexplored reasonable directions from the available objective/context.
+4. Produce a revised strategy emphasizing an unexplored direction.
+5. Preserve the overall objective.
+6. Preserve sandbox constraints.
+7. Increment revision.
+8. Set parent_revision to the previous strategy revision.
+
+Example:
+
+Previous:
+
+Strategy #2
+Focus:
+authentication
+
+Result:
+no meaningful progress
+
+Reviewer:
+
+Authentication investigation has not produced new evidence.
+
+Next:
+
+Strategy #3
+Focus:
+authorization and input validation
+
+This demonstrates strategic diversification.
+
+==================================================
+13. DEDUPLICATION
+==================================================
+
+Implement strategy deduplication.
+
+The engine must prevent nearly identical strategies from being generated repeatedly.
+
+Strategies should be compared using normalized semantic fields such as:
+
+- objective
+- priorities
+- constraints
+- meaningful context
+
+Do not rely only on object identity.
+
+Do not require sophisticated embeddings.
+
+A deterministic normalization/hash/fingerprint approach is sufficient.
+
+If a candidate strategy is effectively identical to a recent strategy:
+
+generate an alternative.
+
+If an alternative cannot be generated:
+
+return a controlled result indicating that strategy generation requires diversification.
+
+Do NOT silently return the exact same strategy indefinitely.
+
+==================================================
+14. REVISION TRACKING
+==================================================
+
+Every strategy must have:
+
+revision
+
+parent_revision
+
+Rules:
+
+Initial strategy:
+
+revision = 1
+parent_revision = null
+
+Next strategy:
+
+revision = previous revision + 1
+parent_revision = previous revision
+
+Example:
+
+Strategy #1
+parent = null
+
+Strategy #2
+parent = 1
+
+Strategy #3
+parent = 2
+
+Do not reset revision numbers during normal operation.
+
+==================================================
+15. STRATEGY VALIDATION
+==================================================
+
+Implement Strategy validation at the Strategy Engine boundary.
+
+Reject strategies containing concepts such as:
+
+- target override
+- target selection
+- arbitrary destination
+- external host
+- host execution
+- sandbox escape
+- runtime_reference modification
+- arbitrary command execution
+
+Examples of INVALID strategy content:
+
+"Attack this external IP"
+
+"Change runtime_reference"
+
+"Run commands on the host"
+
+"Use another Docker container"
+
+"Ignore sandbox restrictions"
+
+"Choose a different target"
+
+These must be rejected.
+
+==================================================
+16. HIGH-LEVEL STRATEGY ONLY
+==================================================
+
+Acceptable:
+
+{
+    "objective": "Investigate the authentication surface",
+    "priorities": [
+        "authentication",
+        "session handling"
+    ],
+    "constraints": [
+        "stay within sandbox"
+    ],
+    "context": {
+        "previous_finding": "authentication endpoint identified"
+    },
+    "revision": 2,
+    "parent_revision": 1
+}
+
+NOT acceptable:
+
+[
+    "curl ...",
+    "nmap ...",
+    "bash ...",
+    "docker exec ...",
+    "ssh ...",
+    "run command ..."
+]
+
+Do not generate command lists.
+
+The Strategy Engine describes WHAT investigation direction should be pursued, not HOW to execute commands.
+
+==================================================
+17. DETERMINISTIC MOCK MODE
+==================================================
+
+Implement deterministic mock strategy generation.
+
+Given:
+
+same objective
++
+same previous strategy
++
+same InvestigationResult
++
+same ScoreReport
++
+same history
++
+same seed
+
+the output should be reproducible.
+
+This is important for testing and the hackathon demo.
+
+Provide a configurable seed if the implementation uses pseudo-random selection.
+
+Do not make production behavior depend on uncontrolled randomness.
+
+==================================================
+18. OPTIONAL LLM ABSTRACTION
+==================================================
+
+If the existing project already has an LLM abstraction:
+
+You may create a clean interface such as:
+
+StrategyGenerator
+
+with:
+
+generate_initial_strategy(...)
+generate_next_strategy(...)
+
+But do NOT hard-code a specific provider.
+
+Do NOT spend significant time integrating multiple LLM providers.
+
+For the hackathon, deterministic/mock generation is sufficient.
+
+If no LLM infrastructure exists:
+
+do not add a complex LLM integration.
+
+Use deterministic rule-based strategy evolution.
+
+The architecture should allow an LLM-backed generator later.
+
+==================================================
+19. TESTS
+==================================================
+
+Create comprehensive unit tests for the Strategy Evolution Engine.
+
+At minimum test:
+
+1. Initial strategy generation
+
+2. Initial revision:
+   revision = 1
+   parent_revision = null
+
+3. Strategy after meaningful progress
+
+4. Strategy after failure
+
+5. Strategy after strong evidence
+
+6. Stagnation detection
+
+7. Teacher/Reviewer behavior
+
+8. Strategy diversification
+
+9. Duplicate strategy detection
+
+10. Revision tracking
+
+11. Parent revision tracking
+
+12. Invalid target-control content
+
+13. Host execution rejection
+
+14. Runtime reference modification rejection
+
+15. Sandbox escape rejection
+
+16. Arbitrary destination rejection
+
+17. Deterministic generation
+
+18. Memory insertion
+
+19. Memory retrieval
+
+20. Successful direction tracking
+
+21. Failed direction tracking
+
+22. Strategy history influencing future strategy
+
+==================================================
+20. MOCK SCENARIO
+==================================================
+
+Use the Chunk 1 three-round mock scenario.
+
+ROUND 1:
+
+Strategy A
+
+Progress:
+20
+
+Solved:
+false
+
+Evidence:
+initial reconnaissance
+
+The engine should record this.
+
+Then generate Strategy B.
+
+ROUND 2:
+
+Strategy B
+
+Progress:
+60
+
+Solved:
+false
+
+Evidence:
+strong evidence
+
+The engine should update memory.
+
+Then generate Strategy C.
+
+ROUND 3:
+
+Strategy C
+
+Progress:
+100
+
+Solved:
+true
+
+The engine should preserve the complete history.
+
+IMPORTANT:
+
+Do NOT hard-code:
+
+20 → 60 → 100
+
+inside the actual Strategy Engine.
+
+Those values are only test/demo inputs.
+
+The Strategy Engine must react to whatever InvestigationResult and ScoreReport it receives.
+
+==================================================
+21. STRATEGY GENERATION EXAMPLE
+==================================================
+
+Example input (field names illustrative — see STOP CONDITION 4 if the real ScoreReport/InvestigationResult use different names):
+
+Objective:
+Investigate authentication and authorization.
+
+Previous Strategy:
+
+revision = 1
+
+priorities:
+[
+    "reconnaissance"
+]
+
+Previous result:
+
+progress_signals:
+[
+    "authentication endpoint identified"
+]
+
+evidence_summary:
+"Authentication surface discovered."
+
+Score:
+
+progress_score = 20
+progress_level = "reconnaissance"
+solved = false
+
+Possible next strategy:
+
+revision = 2
+parent_revision = 1
+
+priorities:
+[
+    "authentication",
+    "session handling"
+]
+
+constraints:
+[
+    "stay within sandbox"
+]
+
+context:
+{
+    "previous_finding": "authentication endpoint identified"
+}
+
+The exact output is not required to match this example.
+
+The important requirement is that the strategy is logically informed by the previous result.
+
+==================================================
+22. NO SCORING LOGIC
+==================================================
+
+Do NOT implement the Evaluation Engine.
+
+The Strategy Engine receives ScoreReport.
+
+It does NOT calculate progress_score.
+
+It does NOT decide whether a result is solved.
+
+It can use:
+
+score.progress_score
+score.progress_level
+score.solved
+score.stagnated
+
+as inputs (or the real equivalent fields — see STOP CONDITION 4).
+
+The Evaluation Engine belongs to Chunk 5.
+
+==================================================
+23. NO MUTeki DEPENDENCY
+==================================================
+
+The Strategy Evolution Engine must run without:
+
+- Muteki
+- Muteki workers
+- Muteki coordinator
+- Docker
+- security tools
+- external target
+
+It should be possible to run:
+
+Strategy Engine
++
+mock InvestigationResult
++
+mock ScoreReport
+
+entirely locally.
+
+==================================================
+24. NO UI CHANGES
+==================================================
+
+Do NOT modify the frontend.
+
+The UI team will consume the Strategy objects and strategy history.
+
+If useful, provide sample JSON/history fixtures.
+
+Do not build UI components.
+
+==================================================
+25. DOCUMENTATION
+==================================================
+
+Create:
+
+docs/STRATEGY_ENGINE.md
+
+Document:
+
+1. Strategy model
+2. Initial strategy generation
+3. Next strategy generation
+4. Memory
+5. Teacher/Reviewer
+6. Stagnation detection
+7. Deduplication
+8. Revision tracking
+9. Validation
+10. Deterministic mode
+11. Mock mode
+12. Extension points for future LLM integration
+13. Any STOP CONDITIONS triggered (Section 0) and how they were resolved
+
+Also document examples of:
+
+Strategy #1
+↓
+Strategy #2
+↓
+Strategy #3
+
+and explain why each changed.
+
+==================================================
+26. FILE STRUCTURE
+==================================================
+
+Prefer a clean structure similar to:
+
+app/
+  strategy/
+    __init__
+    models / if required by existing architecture
+    generator
+    memory
+    reviewer
+    validator
+    deduplication
+    stagnation
+    mocks
+
+tests/
+  strategy/
+
+Do not create unnecessary files.
+
+Follow the project's existing language/framework conventions. If those conventions are ambiguous or nothing exists yet to match, see STOP CONDITION 5 (Section 0).
+
+==================================================
+27. API / INTERFACE EXPECTATION
+==================================================
+
+The Strategy Evolution Engine should expose clean application-level functions/classes.
+
+Conceptually:
+
+generate_initial_strategy(
+    objective,
+    priorities,
+    constraints,
+    context
+) -> Strategy
+
+generate_next_strategy(
+    previous_strategy,
+    investigation_result,
+    score_report,
+    history
+) -> Strategy
+
+record_iteration(
+    strategy,
+    investigation_result,
+    score_report
+)
+
+review_history(
+    history
+) -> Review
+
+validate_strategy(
+    strategy
+) -> ValidationResult
+
+is_duplicate(
+    strategy,
+    history
+) -> bool
+
+Do not blindly use these exact function signatures if the project's existing contract suggests a better equivalent.
+
+Keep the responsibilities separated and testable.
+
+==================================================
+28. SECURITY REQUIREMENTS
+==================================================
+
+The Strategy Engine is not an execution engine.
+
+It must fail closed when invalid strategy content is detected.
+
+It must never:
+
+- select target
+- alter target
+- alter runtime_reference
+- execute commands
+- escape sandbox
+- communicate with host
+- create arbitrary external destinations
+- bypass application validation
+
+Do not add hidden execution functionality.
+
+==================================================
+29. FINAL VERIFICATION
+==================================================
+
+Before finishing:
+
+Run all relevant tests.
+
+Note on blockers: as in Chunks 1 and 2, an item blocked by a STOP CONDITION (Section 0) stays unchecked with a documented reason in docs/STRATEGY_ENGINE.md. That is a valid stopping point, not a failure.
+
+Verify:
+
+[ ] Strategy Engine runs without Muteki
+
+[ ] Strategy Engine runs without UI
+
+[ ] Strategy Engine runs without Docker
+
+[ ] Strategy Engine uses Chunk 1 contracts (or documents which parts were unavailable/incomplete)
+
+[ ] Initial strategy works
+
+[ ] Next strategy works
+
+[ ] Strategy responds to previous result
+
+[ ] Strategy responds to previous score
+
+[ ] Memory works
+
+[ ] Teacher/Reviewer works
+
+[ ] Stagnation detection works
+
+[ ] Diversification works
+
+[ ] Duplicate strategies are prevented
+
+[ ] Revision numbers work
+
+[ ] Parent revision works
+
+[ ] Invalid target-control strategies are rejected
+
+[ ] Host execution instructions are rejected
+
+[ ] Sandbox escape instructions are rejected
+
+[ ] runtime_reference modification is rejected
+
+[ ] Arbitrary destination is rejected
+
+[ ] Deterministic mode works
+
+[ ] Three-round mock scenario works
+
+[ ] No Muteki dependency exists
+
+[ ] No scoring logic exists
+
+[ ] No UI modifications were made
+
+[ ] No upstream repository was modified
+
+[ ] docs/STRATEGY_ENGINE.md exists, including any STOP CONDITIONS triggered
+
+==================================================
+30. MERGE REQUIREMENT
+==================================================
+
+The implementation must be easy for Chunk 6 to consume.
+
+Chunk 6 should be able to do:
+
+Trusted SandboxTarget
+↓
+Strategy Engine
+↓
+Strategy validation
+↓
+Muteki Adapter
+↓
+InvestigationResult
+↓
+Evaluation Engine
+↓
+ScoreReport
+↓
+Strategy Memory
+↓
+Strategy Engine
+↓
+next Strategy
+
+without changing the Strategy Engine's core architecture.
+
+==================================================
+FINAL PRINCIPLE
+==================================================
+
+The differentiating feature of Muteki-Evolve is NOT:
+
+"generate different text every round."
+
+The differentiating feature is:
+
+The system remembers what happened,
+understands what made progress,
+recognizes failed/stagnant directions,
+and produces a better-informed next investigation strategy.
+
+Therefore:
+
+DO NOT optimize for random variation.
+
+OPTIMIZE FOR MEANINGFUL STRATEGY EVOLUTION.
+
+Keep the implementation simple, deterministic, testable, and independent of Muteki.
+
+Do not over-engineer.
+
+Do not add features outside Chunk 3.
