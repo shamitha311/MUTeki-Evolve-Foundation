@@ -1,0 +1,1087 @@
+# MUTeki-Evolve — CHUNK 2
+
+## Project-Owned Judge-Facing UI / Demo Console
+
+You are implementing **Chunk 2** of the Muteki-Evolve hackathon project.
+
+Chunk 1 has already established the project foundation and application contracts.
+
+Your job is now to build the **project-owned frontend/dashboard** that will eventually visualize the autonomous security investigation and strategy-evolution loop.
+
+This UI must work **WITHOUT a real Muteki installation**.
+
+The first implementation must use deterministic mock/replay data.
+
+Later developers will connect the real backend.
+
+Do NOT redesign the architecture.
+
+---
+
+# 0. STOP CONDITIONS — READ FIRST
+
+Before writing UI code, know when to halt and report instead of guessing.
+
+**STOP and write a clear note in `docs/UI_CONTRACT.md` (do not guess, do not invent, do not silently work around) if:**
+
+1. **Chunk 1's contract docs don't exist at all** (`docs/INTEGRATION_CONTRACT.md` missing, or `app/models/` missing/empty). Don't recreate them from scratch or invent your own version — report that Chunk 1 needs to finish first and stop.
+2. **Chunk 1's contracts exist but are incomplete or marked "Not yet verified"** for something Chunk 2 needs (e.g., the real event shape, the adapter's return type). This is not a hard stop — build against what does exist, use the project-owned models as-is even if partial, and note explicitly in `docs/UI_CONTRACT.md` which parts of the UI are built against provisional/unverified contracts.
+3. **The real project-owned model field names differ from the illustrative examples in this plan** (e.g., Sections 11, 17, 19 show `progress_score`, `solved`, `getCurrentStrategy()`, etc. as examples). The real model from `app/models/` always wins. Do not rename the real model to match this document, and do not silently maintain two parallel shapes — adapt the UI to the actual contract and note the difference if it's non-trivial.
+4. **No frontend framework/stack has been established by Chunk 1** (or an existing Replit project already has one that isn't React). Don't assume React because the layout language in Section 2 uses component-style names. Inspect `app/ui/` and the existing project setup first; match what's there. If genuinely nothing exists yet, choosing React (or whatever the existing broader stack implies) is reasonable — just state the choice explicitly in `docs/UI_CONTRACT.md` rather than assuming it silently.
+
+As in Chunk 1: none of these mean abandon the chunk. They mean document the real situation, make the smallest safe decision needed to keep moving, and flag it clearly.
+
+---
+
+# 1. FIRST — READ CHUNK 1
+
+Before writing frontend code, inspect:
+
+docs/INTEGRATION_CONTRACT.md
+
+docs/UPSTREAM_NOTES.md
+
+docs/SETUP.md
+
+Also inspect:
+
+app/models/
+
+app/strategy/
+
+app/muteki_adapter/
+
+tests/
+
+Understand the project-owned contracts before creating UI types. If these don't exist or are incomplete, see STOP CONDITIONS 1–2 in Section 0.
+
+DO NOT create duplicate versions of:
+
+* Strategy
+* SandboxTarget
+* InvestigationEvent
+* Evidence
+* InvestigationResult
+* ScoreReport
+
+If the existing project-owned models can be imported, use them. Their real field names and shapes take priority over any example schema shown later in this document (see STOP CONDITION 3).
+
+The UI should depend on project-owned application contracts, NOT Muteki internals.
+
+---
+
+# 2. UI ARCHITECTURE RULE
+
+The UI is a thin presentation layer.
+
+The architecture should be:
+
+Project-owned Application Contracts
+↓
+UI Data Adapter / View Model
+↓
+UI Components
+↓
+Judge-facing Dashboard
+
+The UI must NOT directly import:
+
+* Muteki worker classes
+* Muteki coordinator
+* Muteki blackboard internals
+* Muteki event objects
+* MTASA internal classes
+* MTASA frontend components
+
+The UI must consume normalized application-level data.
+
+Note on stack: this document sometimes refers to "React/UI Components" as shorthand. That is not a mandate — see STOP CONDITION 4 (Section 0). Use whatever frontend approach the existing project has already established; only choose a new one if nothing exists yet, and state that choice in `docs/UI_CONTRACT.md`.
+
+---
+
+# 3. DO NOT MERGE EXISTING FRONTENDS
+
+Absolutely DO NOT:
+
+* merge Muteki's frontend
+* merge MTASA's frontend
+* import Muteki frontend components
+* import MTASA frontend components
+* copy Muteki UI architecture
+* copy MTASA UI architecture
+
+Create one clean project-owned dashboard.
+
+---
+
+# 4. PRODUCT GOAL
+
+The judge should immediately understand:
+
+"What is this system doing?"
+
+The dashboard should visually communicate:
+
+Trusted sandbox target
+↓
+Objective
+↓
+Current strategy
+↓
+Muteki investigation
+↓
+Live events
+↓
+Evidence
+↓
+Progress score
+↓
+Strategy learning
+↓
+Next strategy
+
+The UI is optimized for a **2–3 minute hackathon demo**.
+
+This is NOT a full security operations platform.
+
+Keep it focused.
+
+---
+
+# 5. REQUIRED INFORMATION
+
+The dashboard must display:
+
+1. Sandbox target name
+2. Overall objective
+3. Current strategy
+4. Strategy revision
+5. Parent revision
+6. Current iteration
+7. Muteki run status
+8. Live/near-live investigation events
+9. Evidence/progress
+10. Current score
+11. Score history
+12. Strategy evolution
+13. Final solved/unsolved state
+14. Errors/timeouts
+
+---
+
+# 6. REQUIRED COMPONENTS
+
+Create these project-owned UI components:
+
+TargetCard
+
+ObjectiveCard
+
+StrategyCard
+
+InvestigationTimeline
+
+EvidencePanel
+
+ScorePanel
+
+ScoreHistory
+
+StrategyHistory
+
+SystemStatus
+
+Also create a main dashboard page that composes them.
+
+Suggested conceptual layout:
+
+---
+
+## | Muteki-Evolve                 SYSTEM STATUS     |
+
+| Target                | Objective              |
+| Sandbox Target       | Security Objective     |
+-------------------------------------------------
+
+| Current Strategy                               |
+| Revision #2 | Parent #1                       |
+| priorities / constraints / context            |
+-------------------------------------------------
+
+| Investigation Timeline                         |
+| ✓ event                                        |
+| ✓ event                                        |
+| ● event                                        |
+| ...                                             |
+---------------------------------------------------
+
+| Evidence                  | Progress Score      |
+| evidence item             | 64 / 100            |
+| evidence item             | Strong Evidence    |
+--------------------------------------------------
+
+| Score History            | Strategy Evolution  |
+| R1 20                    | #1 Strategy A       |
+| R2 60                    | #2 Strategy B       |
+| R3 100                   | #3 Strategy C       |
+--------------------------------------------------
+
+| FINAL RESULT                                   |
+| SOLVED / IN PROGRESS / FAILED                 |
+-------------------------------------------------
+
+This is only a structural guide.
+
+Use good UI judgment.
+
+---
+
+# 7. VISUAL DESIGN
+
+Make the dashboard feel like a modern AI/security research system.
+
+Design goals:
+
+* clean
+* professional
+* technical
+* readable
+* responsive
+* visually impressive
+* not overloaded
+
+Use:
+
+* clear hierarchy
+* cards
+* status indicators
+* timeline
+* score visualization
+* strategy revision badges
+* iteration indicators
+* evidence grouping
+
+Avoid:
+
+* unnecessary animations
+* excessive gradients
+* excessive glowing effects
+* huge text
+* clutter
+* fake terminal spam
+* meaningless charts
+
+The judge must understand the system within seconds.
+
+---
+
+# 8. MAIN DEMO EXPERIENCE
+
+Create a prominent "Demo / Replay" experience.
+
+The UI should allow the user to run a deterministic three-round replay.
+
+Replay sequence:
+
+## ROUND 1
+
+Strategy A
+
+Status:
+Running → Completed
+
+Investigation:
+
+* reconnaissance event
+* target surface discovery
+* initial evidence
+
+Progress:
+20
+
+Solved:
+false
+
+Strategy revision:
+1
+
+---
+
+## ROUND 2
+
+Strategy B
+
+Strategy B should visibly differ from Strategy A.
+
+Investigation:
+
+* deeper investigation
+* stronger evidence
+* new direction based on Round 1
+
+Progress:
+60
+
+Solved:
+false
+
+Strategy revision:
+2
+
+Parent revision:
+1
+
+---
+
+## ROUND 3
+
+Strategy C
+
+Strategy C should visibly differ from Strategy B.
+
+Investigation:
+
+* validation
+* final evidence
+* success condition
+
+Progress:
+100
+
+Solved:
+true
+
+Strategy revision:
+3
+
+Parent revision:
+2
+
+---
+
+# 9. IMPORTANT — THIS IS REPLAY DATA
+
+Do NOT pretend the replay data came from a real Muteki execution.
+
+Label the mode clearly:
+
+"Demo Replay"
+
+or
+
+"Mock Replay"
+
+The purpose is to prove the UI and application contracts work before real integration exists.
+
+---
+
+# 10. REPLAY CONTROLS
+
+Create simple controls:
+
+* Start Replay
+* Pause
+* Next Round
+* Reset
+* Auto Play
+
+Do not make the interaction complicated.
+
+A judge should be able to start the demo immediately.
+
+Suggested behavior:
+
+Start Replay
+→ Round 1 appears
+→ events progressively appear
+→ score updates
+→ Round 1 completes
+→ Strategy #2 appears
+→ Round 2 runs
+→ score changes
+→ Strategy #3 appears
+→ Round 3 runs
+→ final solved state appears
+
+The exact animation timing can be simple.
+
+Reliability is more important than animation.
+
+---
+
+# 11. LIVE DATA CONTRACT
+
+Create a clean abstraction between the UI and future backend.
+
+For example:
+
+ApplicationDataSource
+
+with conceptual methods:
+
+getCurrentTarget()
+
+getCurrentObjective()
+
+getCurrentStrategy()
+
+getCurrentRun()
+
+subscribeToEvents()
+
+getInvestigationResult()
+
+getScoreReport()
+
+getScoreHistory()
+
+getStrategyHistory()
+
+Do NOT hard-code these as final backend APIs if the backend contract from Chunk 1 says otherwise.
+
+These method names and the field names used throughout this document (e.g. `progress_score`, `solved`) are illustrative. If Chunk 1's actual contracts use different names or shapes, the real contract wins — see STOP CONDITION 3 (Section 0).
+
+The important thing is to establish a clean UI data boundary.
+
+The replay implementation should implement the same conceptual data source.
+
+Later, the real backend can replace the replay source.
+
+---
+
+# 12. UI STATE MODEL
+
+Support at least these states:
+
+## IDLE
+
+No active run.
+
+Display:
+
+"Ready to investigate"
+
+---
+
+## RUNNING
+
+Muteki investigation active.
+
+Display:
+
+* active status
+* current iteration
+* current strategy
+* event timeline
+* progress
+
+---
+
+## COMPLETED
+
+Investigation completed.
+
+Display:
+
+* final result
+* score
+* evidence
+* solved status
+
+---
+
+## MUTeki UNAVAILABLE
+
+Display a clear non-technical message:
+
+"Muteki is currently unavailable."
+
+Do not crash the UI.
+
+---
+
+## EVALUATOR FAILURE
+
+Display:
+
+"Evaluation unavailable."
+
+Preserve investigation information where possible.
+
+---
+
+## INCOMPLETE EVIDENCE
+
+Display:
+
+"Evidence incomplete."
+
+Do not fabricate missing evidence.
+
+---
+
+## TIMEOUT
+
+Display:
+
+"Investigation timed out."
+
+Show the iteration and available evidence.
+
+---
+
+## EMPTY EVENT STREAM
+
+Display:
+
+"No investigation events received yet."
+
+Do not show fake events.
+
+---
+
+# 13. TARGET HANDLING
+
+The UI may DISPLAY the trusted SandboxTarget.
+
+The UI must NOT allow arbitrary target creation or target override.
+
+Do not create:
+
+* URL target input
+* arbitrary host input
+* runtime_reference editor
+* "change target" field
+* command input
+
+The UI should treat the target as trusted application state.
+
+If target selection is eventually needed, it must be implemented through a trusted application-level mechanism, not free-form generated input.
+
+For this chunk, displaying the current registered target is sufficient.
+
+---
+
+# 14. STRATEGY DISPLAY
+
+Show:
+
+* objective
+* priorities
+* constraints
+* context where useful
+* revision
+* parent revision
+
+Make the evolution visually obvious.
+
+Example:
+
+Strategy #1
+Parent: —
+Focus: reconnaissance
+
+↓
+
+Strategy #2
+Parent: #1
+Focus: authentication + authorization
+
+↓
+
+Strategy #3
+Parent: #2
+Focus: validate discovered evidence
+
+The judge should immediately understand:
+
+"The strategy changed because the previous investigation produced information."
+
+---
+
+# 15. INVESTIGATION TIMELINE
+
+The InvestigationTimeline should consume normalized:
+
+InvestigationEvent
+
+Display:
+
+* sequence
+* timestamp
+* type
+* summary
+* worker where available
+* status
+
+Do not expose raw Muteki event internals.
+
+Use readable summaries.
+
+Example:
+
+[01] Reconnaissance
+Discovered authentication surface
+
+[02] Discovery
+Identified authorization boundary
+
+[03] Evidence
+Strong evidence collected
+
+[04] Validation
+Success condition verified
+
+---
+
+# 16. EVIDENCE PANEL
+
+Consume normalized:
+
+Evidence
+
+Display:
+
+* evidence type
+* concise summary
+* confidence
+* source event when available
+
+Do not display raw exploit payloads.
+
+Do not fabricate evidence.
+
+For mock mode, clearly mark evidence as demo data.
+
+---
+
+# 17. SCORE PANEL
+
+Consume:
+
+ScoreReport
+
+Display:
+
+progress_score
+
+progress_level
+
+reasons
+
+solved
+
+stagnated
+
+Make the distinction visually clear:
+
+Progress: 60 / 100
+
+Solved: NO
+
+Do NOT label the score:
+
+"60% solved"
+
+That would violate the application semantics.
+
+Use:
+
+"Investigation Progress"
+
+---
+
+# 18. SCORE HISTORY
+
+Show score progression across iterations.
+
+Example:
+
+Iteration 1 → 20
+Iteration 2 → 60
+Iteration 3 → 100
+
+A simple line chart, step chart, or visual progression is enough.
+
+Do not build a complex analytics dashboard.
+
+---
+
+# 19. STRATEGY HISTORY
+
+Show the evolution of strategies.
+
+For each iteration show:
+
+* revision
+* parent revision
+* key priorities
+* outcome
+* score
+
+Example:
+
+#1
+Reconnaissance
+Score 20
+
+↓
+
+#2
+Authentication / Authorization
+Score 60
+
+↓
+
+#3
+Validation
+Score 100
+
+This is one of the most important visual elements because strategy evolution is the project's differentiator.
+
+---
+
+# 20. SYSTEM STATUS
+
+Create SystemStatus.
+
+Show:
+
+Muteki:
+
+* Ready
+* Running
+* Unavailable
+* Completed
+
+Evaluator:
+
+* Ready
+* Evaluating
+* Failed
+
+Strategy Engine:
+
+* Ready
+* Generating
+* Complete
+
+Current iteration:
+
+* 1 / 3
+* 2 / 3
+* 3 / 3
+
+For replay mode, indicate clearly that the services are simulated.
+
+---
+
+# 21. ERROR HANDLING
+
+The UI must gracefully handle backend failure.
+
+Never crash because:
+
+* Muteki is unavailable
+* evaluator fails
+* event stream stops
+* result is malformed
+* evidence is missing
+* run times out
+* there is no active run
+
+Show useful status information instead.
+
+Example:
+
+"Muteki unavailable — showing last known investigation state."
+
+---
+
+# 22. RESPONSIVE DESIGN
+
+The UI must work on:
+
+* desktop
+* laptop
+* tablet
+* smaller screens
+
+The primary judge demo is desktop.
+
+Optimize the desktop experience first.
+
+Do not allow important information to become inaccessible because of fixed-width layouts.
+
+---
+
+# 23. UI CONTRACT
+
+Create:
+
+docs/UI_CONTRACT.md
+
+Document:
+
+* UI data models
+* components
+* data source abstraction
+* replay data
+* UI states
+* error states
+* expected normalized application data
+* integration boundary
+* any STOP CONDITIONS triggered (Section 0) and how they were resolved
+
+Explicitly document:
+
+The UI depends on project-owned contracts.
+
+The UI does NOT depend directly on Muteki or MTASA internals.
+
+---
+
+# 24. TESTING
+
+Add frontend tests where the current project setup supports them.
+
+At minimum verify:
+
+* dashboard renders
+* target renders
+* objective renders
+* strategy renders
+* strategy revision renders
+* timeline renders
+* evidence renders
+* score renders
+* score history renders
+* strategy history renders
+* replay starts
+* replay progresses through 3 rounds
+* replay reset works
+* solved state renders
+* timeout state renders
+* Muteki unavailable state renders
+* empty event state renders
+
+Do not over-engineer testing infrastructure.
+
+---
+
+# 25. IMPORTANT: NO FAKE BACKEND CLAIMS
+
+The replay system is allowed to simulate data.
+
+But never represent mock data as live Muteki data.
+
+The UI should have a visible mode indicator such as:
+
+DEMO REPLAY
+
+When later connected to the real backend, this should become:
+
+LIVE
+
+or
+
+LIVE MUTeki
+
+depending on the final application contract.
+
+---
+
+# 26. DO NOT IMPLEMENT
+
+Do NOT implement:
+
+* real Muteki integration
+* Muteki worker communication
+* shell command execution
+* target execution
+* scoring engine
+* strategy generation
+* Teacher logic
+* strategy memory
+* MTASA integration
+* authentication system
+* user management
+* database
+* arbitrary target input
+* security decision logic
+
+Those belong elsewhere.
+
+---
+
+# 27. FINAL DEMO FLOW
+
+The UI should support this exact presentation flow:
+
+1. Open dashboard.
+
+2. Judge sees:
+
+   Muteki-Evolve
+
+   Demo Replay
+
+3. Show registered sandbox target.
+
+4. Show objective.
+
+5. Click Start Replay.
+
+6. Strategy #1 appears.
+
+7. Investigation events appear.
+
+8. Evidence appears.
+
+9. Progress score becomes 20.
+
+10. Round 1 completes.
+
+11. Strategy #2 appears.
+
+12. Parent revision shows #1.
+
+13. Investigation events change.
+
+14. Evidence becomes stronger.
+
+15. Score becomes 60.
+
+16. Strategy #3 appears.
+
+17. Parent revision shows #2.
+
+18. Investigation runs again.
+
+19. Final evidence appears.
+
+20. Score becomes 100.
+
+21. Solved becomes TRUE.
+
+The visual story should be:
+
+Strategy changes
+→ investigation changes
+→ evidence changes
+→ score changes
+→ next strategy changes
+
+That is the key demo.
+
+---
+
+# 28. DEFINITION OF DONE
+
+Note on ordering and blockers: as in Chunk 1, an item blocked by a STOP CONDITION (Section 0) — most likely because a Chunk 1 artifact is missing or incomplete — stays unchecked with a documented reason in `docs/UI_CONTRACT.md`. That is a valid stopping point, not a failure.
+
+Chunk 2 is complete when:
+
+[ ] Project-owned dashboard exists
+
+[ ] Dashboard works without Muteki
+
+[ ] Dashboard works without MTASA
+
+[ ] UI uses project-owned application contracts (or documents which ones were unavailable/incomplete)
+
+[ ] UI does not import Muteki internals
+
+[ ] UI does not import MTASA internals
+
+[ ] Target card exists
+
+[ ] Objective card exists
+
+[ ] Strategy card exists
+
+[ ] Investigation timeline exists
+
+[ ] Evidence panel exists
+
+[ ] Score panel exists
+
+[ ] Score history exists
+
+[ ] Strategy history exists
+
+[ ] System status exists
+
+[ ] Demo Replay exists
+
+[ ] Three-round replay works
+
+[ ] Strategy #1 displays
+
+[ ] Strategy #2 visibly differs
+
+[ ] Strategy #3 visibly differs
+
+[ ] Parent revision is visible
+
+[ ] Investigation events update
+
+[ ] Evidence updates
+
+[ ] Score updates
+
+[ ] Solved state is visible
+
+[ ] Error states work
+
+[ ] Timeout state works
+
+[ ] Empty event state works
+
+[ ] Muteki unavailable state works
+
+[ ] UI is responsive
+
+[ ] docs/UI_CONTRACT.md exists, including any STOP CONDITIONS triggered
+
+[ ] No arbitrary target selection exists
+
+[ ] No command execution exists
+
+[ ] No security decisions are made by UI
+
+[ ] No fake live Muteki data is presented
+
+[ ] Replay mode is clearly labeled
+
+---
+
+# 29. FINAL QUALITY CHECK
+
+Before finishing, ask:
+
+Can a judge understand the project in 10 seconds?
+
+Can a judge see that the strategy changes?
+
+Can a judge see that investigation results change?
+
+Can a judge see that progress changes?
+
+Can a judge see that the system eventually reaches a solved state?
+
+Can the UI run without any real backend?
+
+Can the real backend later replace the replay data without rewriting the UI?
+
+If yes, Chunk 2 is successful.
+
+Keep the implementation simple.
+
+The priority is:
+
+**RELIABLE DEMO > COMPLEX UI**
+
+The final UI should make the core idea obvious:
+
+"We don't tell the system how to solve the security challenge. We give it a bounded objective. It investigates autonomously, measures progress, remembers what happened, changes its strategy, and investigates again."

@@ -1,0 +1,28 @@
+kind = "web"
+previewPath = "/"
+title = "MUTeki-Evolve"
+description = "A judge-facing demo console that replays a bounded, multi-round security investigation using project-owned contracts and deterministic mock data."
+version = "1.0.0"
+id = "artifacts/muteki-evolve"
+router = "path"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19640
+
+[services.development]
+run = "pnpm --filter @workspace/muteki-evolve run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/muteki-evolve", "run", "build" ]
+serve = "static"
+publicDir = "artifacts/muteki-evolve/dist/public"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19640"
+BASE_PATH = "/"
