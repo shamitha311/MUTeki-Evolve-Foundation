@@ -1,0 +1,22 @@
+# System
+.DS_Store
+*.pyc
+__pycache__/
+.venv/
+*.zip
+
+# Secrets
+.env
+.env.local
+config.local.json
+
+# Runtime outputs
+out/
+out_backups/
+
+# Frontend local runtime cache
+frontend/.runtime/
+
+# Local git worktrees
+.worktrees/
+.python-version

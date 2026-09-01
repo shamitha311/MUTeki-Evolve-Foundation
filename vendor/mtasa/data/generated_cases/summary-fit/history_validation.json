@@ -1,0 +1,239 @@
+{
+  "solvers": {
+    "v67": {
+      "online": {
+        "high_noise_seed601": 589.31,
+        "large_seed301": 793.41,
+        "large_seed302": 719.82,
+        "low_willingness_seed501": 1810.44,
+        "medium_seed201": 584.4,
+        "medium_seed202": 622.77,
+        "medium_seed203": 603.66,
+        "scarce_couriers_seed401": 1581.31,
+        "small_seed100": 352.38,
+        "tiny_seed42": 206.27
+      },
+      "datasets": {
+        "summary-fit": {
+          "scores": {
+            "high_noise_seed601": 512.3283,
+            "large_seed301": 733.25902,
+            "large_seed302": 679.578256,
+            "low_willingness_seed501": 2520.857241,
+            "medium_seed201": 593.816634,
+            "medium_seed202": 581.399888,
+            "medium_seed203": 473.607601,
+            "scarce_couriers_seed401": 941.063944,
+            "small_seed100": 287.098004,
+            "tiny_seed42": 123.209397
+          },
+          "coverage": {
+            "high_noise_seed601": "30/30",
+            "large_seed301": "40/40",
+            "large_seed302": "40/40",
+            "low_willingness_seed501": "30/30",
+            "medium_seed201": "30/30",
+            "medium_seed202": "30/30",
+            "medium_seed203": "30/30",
+            "scarce_couriers_seed401": "39/40",
+            "small_seed100": "15/15",
+            "tiny_seed42": "6/6"
+          },
+          "runtime_ms": {
+            "high_noise_seed601": 380.435,
+            "large_seed301": 544.233,
+            "large_seed302": 514.943,
+            "low_willingness_seed501": 2643.577,
+            "medium_seed201": 469.479,
+            "medium_seed202": 447.029,
+            "medium_seed203": 458.188,
+            "scarce_couriers_seed401": 7333.592,
+            "small_seed100": 76.377,
+            "tiny_seed42": 11.463
+          },
+          "case_rank_spearman": 0.915152,
+          "case_shape_pearson": 0.881001,
+          "case_shape_nmae": 0.39252
+        }
+      }
+    },
+    "v69": {
+      "online": {
+        "high_noise_seed601": 589.31,
+        "large_seed301": 749.94,
+        "large_seed302": 700.71,
+        "low_willingness_seed501": 1810.44,
+        "medium_seed201": 573.91,
+        "medium_seed202": 577.04,
+        "medium_seed203": 594.91,
+        "scarce_couriers_seed401": 1581.31,
+        "small_seed100": 352.38,
+        "tiny_seed42": 158.65
+      },
+      "datasets": {
+        "summary-fit": {
+          "scores": {
+            "high_noise_seed601": 512.3283,
+            "large_seed301": 671.261085,
+            "large_seed302": 705.098215,
+            "low_willingness_seed501": 2520.857241,
+            "medium_seed201": 556.137558,
+            "medium_seed202": 550.73054,
+            "medium_seed203": 473.607601,
+            "scarce_couriers_seed401": 941.063944,
+            "small_seed100": 276.054913,
+            "tiny_seed42": 124.831213
+          },
+          "coverage": {
+            "high_noise_seed601": "30/30",
+            "large_seed301": "40/40",
+            "large_seed302": "40/40",
+            "low_willingness_seed501": "30/30",
+            "medium_seed201": "30/30",
+            "medium_seed202": "30/30",
+            "medium_seed203": "30/30",
+            "scarce_couriers_seed401": "39/40",
+            "small_seed100": "15/15",
+            "tiny_seed42": "6/6"
+          },
+          "runtime_ms": {
+            "high_noise_seed601": 2605.094,
+            "large_seed301": 4025.611,
+            "large_seed302": 3998.385,
+            "low_willingness_seed501": 2977.021,
+            "medium_seed201": 3041.808,
+            "medium_seed202": 2697.989,
+            "medium_seed203": 2629.82,
+            "scarce_couriers_seed401": 7376.364,
+            "small_seed100": 582.852,
+            "tiny_seed42": 48.788
+          },
+          "case_rank_spearman": 0.866667,
+          "case_shape_pearson": 0.881095,
+          "case_shape_nmae": 0.409424
+        }
+      }
+    },
+    "v8": {
+      "online": {
+        "high_noise_seed601": 512.83,
+        "large_seed301": 673.36,
+        "large_seed302": 638.54,
+        "low_willingness_seed501": 1799.9,
+        "medium_seed201": 493.55,
+        "medium_seed202": 539.61,
+        "medium_seed203": 512.13,
+        "scarce_couriers_seed401": 1576.36,
+        "small_seed100": 318.57,
+        "tiny_seed42": 158.65
+      },
+      "datasets": {
+        "summary-fit": {
+          "scores": {
+            "high_noise_seed601": 512.3283,
+            "large_seed301": 653.215606,
+            "large_seed302": 642.715307,
+            "low_willingness_seed501": 2273.297899,
+            "medium_seed201": 525.07181,
+            "medium_seed202": 528.436428,
+            "medium_seed203": 424.756886,
+            "scarce_couriers_seed401": 941.063944,
+            "small_seed100": 285.854435,
+            "tiny_seed42": 163.678484
+          },
+          "coverage": {
+            "high_noise_seed601": "30/30",
+            "large_seed301": "40/40",
+            "large_seed302": "40/40",
+            "low_willingness_seed501": "30/30",
+            "medium_seed201": "30/30",
+            "medium_seed202": "30/30",
+            "medium_seed203": "30/30",
+            "scarce_couriers_seed401": "39/40",
+            "small_seed100": "15/15",
+            "tiny_seed42": "6/6"
+          },
+          "runtime_ms": {
+            "high_noise_seed601": 4942.416,
+            "large_seed301": 6725.466,
+            "large_seed302": 6602.307,
+            "low_willingness_seed501": 4781.271,
+            "medium_seed201": 5006.699,
+            "medium_seed202": 5024.114,
+            "medium_seed203": 4932.127,
+            "scarce_couriers_seed401": 7336.09,
+            "small_seed100": 2582.255,
+            "tiny_seed42": 48.18
+          },
+          "case_rank_spearman": 0.963636,
+          "case_shape_pearson": 0.895002,
+          "case_shape_nmae": 0.361858
+        }
+      }
+    },
+    "v20": {
+      "online": {
+        "high_noise_seed601": 518.7,
+        "large_seed301": 676.45,
+        "large_seed302": 657.36,
+        "low_willingness_seed501": 1799.9,
+        "medium_seed201": 491.14,
+        "medium_seed202": 538.73,
+        "medium_seed203": 512.17,
+        "scarce_couriers_seed401": 1576.36,
+        "small_seed100": 318.57,
+        "tiny_seed42": 158.65
+      },
+      "datasets": {
+        "summary-fit": {
+          "scores": {
+            "high_noise_seed601": 512.3283,
+            "large_seed301": 667.189286,
+            "large_seed302": 642.7783,
+            "low_willingness_seed501": 2327.745666,
+            "medium_seed201": 525.07181,
+            "medium_seed202": 530.326753,
+            "medium_seed203": 424.756886,
+            "scarce_couriers_seed401": 941.063944,
+            "small_seed100": 285.854435,
+            "tiny_seed42": 163.678484
+          },
+          "coverage": {
+            "high_noise_seed601": "30/30",
+            "large_seed301": "40/40",
+            "large_seed302": "40/40",
+            "low_willingness_seed501": "30/30",
+            "medium_seed201": "30/30",
+            "medium_seed202": "30/30",
+            "medium_seed203": "30/30",
+            "scarce_couriers_seed401": "39/40",
+            "small_seed100": "15/15",
+            "tiny_seed42": "6/6"
+          },
+          "runtime_ms": {
+            "high_noise_seed601": 4944.533,
+            "large_seed301": 6948.886,
+            "large_seed302": 6604.097,
+            "low_willingness_seed501": 4797.476,
+            "medium_seed201": 4978.602,
+            "medium_seed202": 4973.59,
+            "medium_seed203": 4940.074,
+            "scarce_couriers_seed401": 7342.181,
+            "small_seed100": 2576.755,
+            "tiny_seed42": 49.204
+          },
+          "case_rank_spearman": 0.963636,
+          "case_shape_pearson": 0.891411,
+          "case_shape_nmae": 0.364554
+        }
+      }
+    }
+  },
+  "summary": {
+    "summary-fit": {
+      "mean_case_rank_spearman": 0.92727275,
+      "mean_case_shape_pearson": 0.88712725,
+      "mean_case_shape_nmae": 0.382089
+    }
+  }
+}

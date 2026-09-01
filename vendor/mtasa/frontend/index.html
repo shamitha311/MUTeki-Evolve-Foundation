@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MTASA 本地控制台</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header>
+      <h1>MTASA 本地控制台</h1>
+    </header>
+
+    <main>
+      <section id="errorBanner" class="error-banner hidden"></section>
+
+      <div class="column column-fool">
+        <h2 class="column-title">Fool · 控制与输出</h2>
+
+        <section>
+          <h2>API 配置</h2>
+          <div class="grid">
+            <label>API 来源
+              <select id="apiProfile">
+                <option value="manual">手动配置</option>
+              </select>
+            </label>
+            <label>模型名称
+              <select id="modelSelect" class="hidden"></select>
+              <input id="model" type="text" value="gpt-4.1-mini" />
+            </label>
+            <label>每次 AI 输出 Token 上限(K)
+              <input id="maxTokens" type="number" value="8" min="1" max="200" placeholder="例如 8 = 8k" />
+            </label>
+            <label>Reasoning Effort
+              <select id="effortLevel"></select>
+            </label>
+          </div>
+          <div id="manualApiFields" class="grid manual-config hidden">
+            <label>API 类型
+              <select id="apiType">
+                <option value="openai">openai</option>
+                <option value="claude">claude</option>
+                <option value="openrouter">openrouter</option>
+                <option value="deepseek">deepseek</option>
+                <option value="aliyun">aliyun</option>
+                <option value="custom">custom</option>
+              </select>
+            </label>
+            <label>API 密钥
+              <input id="apiKey" type="password" placeholder="sk-..." />
+            </label>
+            <label>基础 URL
+              <input id="baseUrl" type="text" placeholder="optional" />
+            </label>
+          </div>
+          <div class="row">
+            <button id="saveConfigBtn">保存配置</button>
+            <button id="checkApiBtn">检查 API</button>
+            <button id="apiConfigBtn" class="btn-ghost">手动配置 API</button>
+          </div>
+        </section>
+
+        <section>
+          <h2>Fool 运行控制</h2>
+          <div class="grid">
+            <label>迭代次数
+              <input id="iterations" type="number" value="10" min="1" max="200" />
+            </label>
+            <label>每轮最大工具调用步数
+              <input id="maxStepsPerRound" type="number" value="50" min="1" max="500" />
+            </label>
+          </div>
+          <div class="row">
+            <button id="runFoolBtn">开始运行</button>
+            <button id="stopBtn">停止</button>
+            <button id="continueBtn">继续</button>
+            <button id="purgeNotesBtn" class="btn-ghost">归档并清空 out</button>
+          </div>
+        </section>
+
+        <section>
+          <h2>运行状态</h2>
+          <div class="stats">
+            <div>当前迭代: <span id="currentIteration">0</span></div>
+            <div>总迭代数: <span id="totalIterations">0</span></div>
+            <div>阶段: <span id="stage" class="signal signal-bad">空闲</span></div>
+            <div>AI 连接: <span id="aiConnected" class="signal signal-bad">未连接</span></div>
+            <div>AI 端点: <span id="aiEndpoint">-</span></div>
+            <div>AI 消息: <span id="aiMessage" class="signal signal-neutral">未检查</span></div>
+            <div>最近错误: <span id="lastError" class="signal signal-neutral">-</span></div>
+          </div>
+        </section>
+
+        <section>
+          <div class="section-header">
+            <h2>LLM 实时对话</h2>
+          </div>
+          <div id="llmDialogueBox" class="llm-dialogue-box">
+            <div class="empty">暂无对话</div>
+          </div>
+        </section>
+
+        <section>
+          <div class="section-header">
+            <h2>Fool 思考记录</h2>
+            <label class="inline-check">
+              <input id="autoAcceptToggle" type="checkbox" checked />
+              自动接受
+            </label>
+          </div>
+          <div class="row thought-actions">
+            <button id="acceptIterationBtn" disabled>接受本轮计划并继续</button>
+            <span id="approvalHint" class="signal signal-neutral">自动循环中</span>
+          </div>
+          <div id="thoughtsBox" class="thoughts-box">
+            <div class="empty">暂无思考记录</div>
+          </div>
+        </section>
+
+        <section>
+          <h2>最佳算法</h2>
+          <div>最佳算法路径: <span id="bestSolverPath">-</span></div>
+        </section>
+      </div>
+
+      <div class="column column-genius">
+        <h2 class="column-title">Genius · 输入与评分</h2>
+
+        <section>
+          <h2>Dataset / Genius Panel</h2>
+          <div class="grid">
+            <label>Dataset Path
+              <input id="datasetPath" type="text" value="data/sample_10_cases" />
+            </label>
+            <label>Scoring Mode
+              <input id="scoringMode" type="text" value="official_like_latest (fixed)" readonly />
+            </label>
+            <label>本地 case 时限 (秒)
+              <input id="maxCaseSeconds" type="number" min="1" max="120" step="0.5" value="25" />
+            </label>
+          </div>
+          <p class="hint hint-warn">
+            本地默认 25s ≈ 美团线上 10s（约 2.5×）。<strong>提交线上前，将 solver 中的
+            <code>BUDGET_SEC = 10.0</code> 保持不变</strong>——Genius 仅在本地把它改写为这里设置的值。
+          </p>
+          <div class="row">
+            <button id="setDatasetBtn">Set Dataset</button>
+          </div>
+          <div class="solver-edit">
+            <div class="solver-edit-header">
+              <span>Submitted Solver (this round):</span>
+              <span id="solverPath" class="solver-path">-</span>
+            </div>
+            <textarea id="solverEdit" spellcheck="false" placeholder="The Python solver script submitted by Fool will appear here once a round completes. Edits will be scored when you click 开始评分."></textarea>
+            <div class="solver-edit-actions">
+              <label class="inline-check">
+                <input id="autoScoreToggle" type="checkbox" checked />
+                自动评分（Fool 提交后自动评分）
+              </label>
+              <div class="solver-action-buttons">
+                <input id="solverFileInput" type="file" accept=".py,text/x-python" hidden />
+                <button id="loadSolverBtn">选择Solver</button>
+                <button id="runGeniusBtn" disabled>开始评分</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section>
+          <h2>Scoring Status</h2>
+          <div class="stats stats-inline">
+            <div>Current Score: <span id="currentScore">-</span></div>
+            <div>Completed Cases: <span id="completedCases">0/0</span></div>
+          </div>
+          <div class="stats stats-inline" style="margin-top: 6px;">
+            <div>Official large301 Score: <span id="officialLarge301Score">-</span></div>
+          </div>
+          <div class="stats stats-inline" style="margin-top: 6px;">
+            <div>打分状态: <span id="scoringStatus" class="signal signal-neutral">-</span></div>
+          </div>
+        </section>
+
+        <section>
+          <h2>Case Results · 本次跑分结果</h2>
+          <table id="caseTable" class="scoreboard">
+            <thead>
+              <tr><th>#</th><th>数据集名</th><th>扣分</th><th>送单率</th><th>耗时</th></tr>
+            </thead>
+            <tbody id="caseBody">
+              <tr><td colspan="5" class="empty">暂无结果</td></tr>
+            </tbody>
+          </table>
+        </section>
+
+        <section>
+          <div class="section-header">
+            <h2>Scoreboard · 历史最好成绩</h2>
+            <button id="clearScoreboardBtn" class="btn-ghost">清空排行榜</button>
+          </div>
+          <table id="scoreboardTable" class="scoreboard">
+            <thead>
+              <tr><th>#</th><th>平均扣分</th><th>官方301得分</th><th>桶下界</th><th>提交时间</th><th>提交次数</th></tr>
+            </thead>
+            <tbody id="scoreboardBody">
+              <tr><td colspan="6" class="empty">暂无成绩</td></tr>
+            </tbody>
+          </table>
+        </section>
+      </div>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>

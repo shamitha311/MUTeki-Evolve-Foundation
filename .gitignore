@@ -47,3 +47,25 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+.conversation/
+
+# Python contract layer
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+.pythonlibs/
+*.pyc
+
+# Local runtime output
+out/
+sessions/
+*.sqlite
+*.sqlite3
+
+# Vendored upstream source metadata is not application source
+vendor/*/.git/
+vendor/*/.venv/
+vendor/*/.pythonlibs/

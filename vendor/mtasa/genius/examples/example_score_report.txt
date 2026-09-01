@@ -1,0 +1,29 @@
+Average Penalty Score
+928.37
+Completed Cases
+10 / 10
+
+high_noise_seed601
+710.12
+30/30(100.0%)
+2166ms
+
+large_seed301
+976.52
+40/40(100.0%)
+2915ms
+
+low_willingness_seed501
+2237.39
+30/30(100.0%)
+2701ms
+
+Meta
+scoring_mode=official_like_latest
+python_cmd=python3.9
+max_case_seconds=10.0
+valid_cases=10
+constraint_python=3.9 required
+constraint_solver_max_bytes=102400
+constraint_case_timeout_sec=10
+merge_uncertainty_note=ordinary+backup treated stable; merge bundle behavior still under research

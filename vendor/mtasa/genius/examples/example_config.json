@@ -1,0 +1,6 @@
+{
+  "solver": "fool/templates/solver_greedy.py",
+  "input_dir": "data/sample_10_cases",
+  "scoring": "official_like_latest",
+  "report": "out/reports/example_report.txt"
+}

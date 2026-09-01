@@ -1,0 +1,266 @@
+{
+  "_meta": {
+    "source": "teacher/DATASET_FEATURE.md",
+    "generated_from_doc_dated": "2026-06-01",
+    "buckets": [
+      "tiny_seed42",
+      "small_seed100",
+      "medium_seed201",
+      "medium_seed202",
+      "medium_seed203",
+      "low_willingness_seed501",
+      "high_noise_seed601",
+      "scarce_couriers_seed401",
+      "large_seed301",
+      "large_seed302"
+    ],
+    "feature_groups": {
+      "structural": "n_tasks, n_couriers, courier_ratio, pool_depth, total_n_candidates",
+      "bundle": "combo_ratio, avg_bundle_size, max_bundle_size (always 2)",
+      "score": "min, p25, median, mean, p75, max, std",
+      "willingness": "mean, std, frac_lt_0_3, frac_gt_0_7, solo_w_mean (probe19)",
+      "joint": "pearson_sw, avg_formula_a_cost",
+      "probes": "online probe results #25-#29, #31, #32-#35, #40 (intervals)"
+    },
+    "notes": [
+      "Most bucket columns from the doc are approximate; large_seed301 columns include 'real' values inline in the doc and are used here when available.",
+      "All max_bundle_size = 2 across every bucket; no n>=3 bundles exist.",
+      "probe31 numerator = singleton-only coverage count from probe_31 submission; denominator = n_tasks."
+    ]
+  },
+
+  "tiny_seed42": {
+    "structural": {"n_tasks": 6, "n_couriers": 12.5, "courier_ratio": 2.08, "pool_depth": 75, "total_n_candidates": 450},
+    "bundle": {"combo_ratio": 0.72, "avg_bundle_size": 1.73, "max_bundle_size": 2},
+    "score": {"min": 10, "p25": 30, "median": 38, "mean": 34, "p75": 50, "max": 63, "std": 13},
+    "willingness": {"mean": 0.38, "std": 0.18, "frac_lt_0_3": 0.32, "frac_gt_0_7": 0.08, "solo_w_mean": null},
+    "joint": {"pearson_sw": -0.37, "avg_formula_a_cost": 123},
+    "probes": {
+      "best_solo_delta_per_task_mean": [66.7, 70.0],
+      "second_solo_delta_ratio":       [0.833, 0.867],
+      "combo_vs_solo_synergy_mean":    [-40.0, -33.3],
+      "combo_vs_solo_synergy_std":     [5.33, 6.67],
+      "frac_synergy_gt_neg10":         [0.0333, 0.0667],
+      "singleton_only_coverage":       "4/6",
+      "solo_opt_conflict_loss_per_task": [1.67, 3.33],
+      "top2_solo_matching_coverage":    [0.967, 1.000],
+      "top1_solo_courier_collision_ratio": [0.133, 0.167],
+      "best_solo_delta_p10":             [53.33, 56.67],
+      "solo_dominates_combo_frac":       [0.967, 1.000]
+    },
+    "tags": ["tiny", "limited combo information", "highly variable due to small n"]
+  },
+
+  "small_seed100": {
+    "structural": {"n_tasks": 15, "n_couriers": 27.5, "courier_ratio": 1.83, "pool_depth": 225, "total_n_candidates": 3375},
+    "bundle": {"combo_ratio": 0.88, "avg_bundle_size": 1.87, "max_bundle_size": 2},
+    "score": {"min": 10, "p25": 30, "median": 46, "mean": 46, "p75": 50, "max": 83, "std": 15},
+    "willingness": {"mean": 0.35, "std": 0.21, "frac_lt_0_3": 0.45, "frac_gt_0_7": 0.08, "solo_w_mean": null},
+    "joint": {"pearson_sw": -0.30, "avg_formula_a_cost": 137},
+    "probes": {
+      "best_solo_delta_per_task_mean": [73.3, 76.7],
+      "second_solo_delta_ratio":       [0.933, 0.967],
+      "combo_vs_solo_synergy_mean":    [-40.0, -33.3],
+      "combo_vs_solo_synergy_std":     [9.33, 10.67],
+      "frac_synergy_gt_neg10":         [0.0000, 0.0333],
+      "singleton_only_coverage":       "12/15",
+      "solo_opt_conflict_loss_per_task": [0.00, 1.67],
+      "top2_solo_matching_coverage":    [0.967, 1.000],
+      "top1_solo_courier_collision_ratio": [0.267, 0.300],
+      "best_solo_delta_p10":             [66.67, 70.00],
+      "solo_dominates_combo_frac":       [0.967, 1.000]
+    },
+    "tags": ["small"]
+  },
+
+  "medium_seed201": {
+    "structural": {"n_tasks": 30, "n_couriers": 62.5, "courier_ratio": 2.08, "pool_depth": 925, "total_n_candidates": 27750},
+    "bundle": {"combo_ratio": 0.95, "avg_bundle_size": 2.00, "max_bundle_size": 2},
+    "score": {"min": 10, "p25": 50, "median": 58, "mean": 58, "p75": 70, "max": 103, "std": 19},
+    "willingness": {"mean": 0.28, "std": 0.21, "frac_lt_0_3_range": [0.58, 0.62], "frac_gt_0_7": 0.05, "solo_w_mean": 0.52},
+    "joint": {"pearson_sw_range": [-0.17, -0.10], "avg_formula_a_cost": 157},
+    "probes": {
+      "best_solo_delta_per_task_mean": [76.7, 80.0],
+      "second_solo_delta_ratio":       [0.933, 0.967],
+      "combo_vs_solo_synergy_mean":    [-40.0, -33.3],
+      "combo_vs_solo_synergy_std":     [10.67, 12.00],
+      "frac_synergy_gt_neg10":         [0.0000, 0.0333],
+      "singleton_only_coverage":       "26/30",
+      "solo_opt_conflict_loss_per_task": [0.00, 1.67],
+      "top2_solo_matching_coverage":    [0.967, 1.000],
+      "top1_solo_courier_collision_ratio": [0.200, 0.233],
+      "best_solo_delta_p10":             [70.00, 73.33],
+      "solo_dominates_combo_frac":       [0.967, 1.000]
+    },
+    "tags": ["medium", "normal-shape"]
+  },
+
+  "medium_seed202": {
+    "structural": {"n_tasks": 30, "n_couriers": 62.5, "courier_ratio": 2.08, "pool_depth": 925, "total_n_candidates": 27750},
+    "bundle": {"combo_ratio": 0.95, "avg_bundle_size": 2.00, "max_bundle_size": 2},
+    "score": {"min": 10, "p25": 50, "median": 58, "mean": 58, "p75": 70, "max": 103, "std": 19},
+    "willingness": {"mean": 0.28, "std": 0.21, "frac_lt_0_3_range": [0.58, 0.62], "frac_gt_0_7": 0.05, "solo_w_mean": 0.52},
+    "joint": {"pearson_sw_range": [-0.17, -0.10], "avg_formula_a_cost": 157},
+    "probes": {
+      "best_solo_delta_per_task_mean": [73.3, 76.7],
+      "second_solo_delta_ratio":       [0.933, 0.967],
+      "combo_vs_solo_synergy_mean":    [-40.0, -33.3],
+      "combo_vs_solo_synergy_std":     [9.33, 10.67],
+      "frac_synergy_gt_neg10":         [0.0000, 0.0333],
+      "singleton_only_coverage":       "25/30",
+      "solo_opt_conflict_loss_per_task": [0.00, 1.67],
+      "top2_solo_matching_coverage":    [0.967, 1.000],
+      "top1_solo_courier_collision_ratio": [0.200, 0.233],
+      "best_solo_delta_p10":             [70.00, 73.33],
+      "solo_dominates_combo_frac":       [0.967, 1.000]
+    },
+    "tags": ["medium", "normal-shape"]
+  },
+
+  "medium_seed203": {
+    "structural": {"n_tasks": 30, "n_couriers": 62.5, "courier_ratio": 2.08, "pool_depth": 925, "total_n_candidates": 27750},
+    "bundle": {"combo_ratio": 0.95, "avg_bundle_size": 2.00, "max_bundle_size": 2},
+    "score": {"min": 10, "p25": 50, "median": 58, "mean": 58, "p75": 70, "max": 103, "std": 19},
+    "willingness": {"mean": 0.28, "std": 0.21, "frac_lt_0_3_range": [0.58, 0.62], "frac_gt_0_7": 0.05, "solo_w_mean": 0.52},
+    "joint": {"pearson_sw_range": [-0.17, -0.10], "avg_formula_a_cost": 157},
+    "probes": {
+      "best_solo_delta_per_task_mean": [73.3, 76.7],
+      "second_solo_delta_ratio":       [0.933, 0.967],
+      "combo_vs_solo_synergy_mean":    [-40.0, -33.3],
+      "combo_vs_solo_synergy_std":     [10.67, 12.00],
+      "frac_synergy_gt_neg10":         [0.0000, 0.0333],
+      "singleton_only_coverage":       "24/30",
+      "solo_opt_conflict_loss_per_task": [0.00, 1.67],
+      "top2_solo_matching_coverage":    [0.967, 1.000],
+      "top1_solo_courier_collision_ratio": [0.100, 0.133],
+      "best_solo_delta_p10":             [70.00, 73.33],
+      "solo_dominates_combo_frac":       [0.967, 1.000]
+    },
+    "tags": ["medium", "normal-shape", "low top1_collision -- better-separated solo identities"]
+  },
+
+  "low_willingness_seed501": {
+    "structural": {"n_tasks": 30, "n_couriers": 62.5, "courier_ratio": 2.08, "pool_depth": 925, "total_n_candidates": 27750},
+    "bundle": {"combo_ratio": 0.95, "avg_bundle_size": 2.00, "max_bundle_size": 2},
+    "score": {"min": 10, "p25": 50, "median": 58, "mean": 58, "p75": 70, "max": 103, "std": 19},
+    "willingness": {"mean": 0.05, "std": 0.04, "frac_lt_0_3": 0.97, "frac_gt_0_7": 0.03, "solo_w_mean": 0.18, "distribution_hint": "Beta(~3, ~55), low_w_combo_offset=0.13"},
+    "joint": {"pearson_sw": -0.30, "avg_formula_a_cost": 190},
+    "probes": {
+      "best_solo_delta_per_task_mean": [23.3, 26.7],
+      "second_solo_delta_ratio":       [0.933, 0.967],
+      "combo_vs_solo_synergy_mean":    [-26.7, -20.0],
+      "combo_vs_solo_synergy_std":     [5.33, 6.67],
+      "frac_synergy_gt_neg10":         [0.0333, 0.0667],
+      "singleton_only_coverage":       "23/30",
+      "solo_opt_conflict_loss_per_task": [0.00, 1.67],
+      "top2_solo_matching_coverage":    [0.967, 1.000],
+      "top1_solo_courier_collision_ratio": [0.267, 0.300],
+      "best_solo_delta_p10":             [20.00, 23.33],
+      "solo_dominates_combo_frac":       [0.967, 1.000]
+    },
+    "tags": ["low_willingness", "w-axis-only anomaly", "best_solo gain low (~24-27/task)"]
+  },
+
+  "high_noise_seed601": {
+    "structural": {"n_tasks": 30, "n_couriers": 62.5, "courier_ratio": 2.08, "pool_depth": 925, "total_n_candidates": 27750},
+    "bundle": {"combo_ratio": 0.95, "avg_bundle_size": 2.00, "max_bundle_size": 2},
+    "score": {"min": 10, "p25": 50, "median": 54, "mean": 58, "p75": 70, "max": 103, "std": 21, "shape_note": "right-skewed vs medium"},
+    "willingness": {"mean": 0.28, "std": 0.21, "frac_lt_0_3": 0.62, "frac_gt_0_7": 0.05, "solo_w_mean": 0.52},
+    "joint": {"pearson_sw": -0.10, "avg_formula_a_cost": 157},
+    "probes": {
+      "best_solo_delta_per_task_mean": [76.7, 80.0],
+      "second_solo_delta_ratio":       [0.933, 0.967],
+      "combo_vs_solo_synergy_mean":    [-40.0, -33.3],
+      "combo_vs_solo_synergy_std":     [12.00, 13.33],
+      "frac_synergy_gt_neg10":         [0.0000, 0.0333],
+      "singleton_only_coverage":       "29/30",
+      "solo_opt_conflict_loss_per_task": [0.00, 1.67],
+      "top2_solo_matching_coverage":    [0.967, 1.000],
+      "top1_solo_courier_collision_ratio": [0.300, 0.333],
+      "best_solo_delta_p10":             [70.00, 73.33],
+      "solo_dominates_combo_frac":       [0.967, 1.000]
+    },
+    "tags": ["high_noise", "score right-skewed only", "highest top1_collision"]
+  },
+
+  "scarce_couriers_seed401": {
+    "structural": {"n_tasks": 40, "n_couriers": 22.5, "courier_ratio": 0.56, "pool_depth": 425, "total_n_candidates": 17000},
+    "bundle": {"combo_ratio": 0.95, "avg_bundle_size": 2.00, "max_bundle_size": 2},
+    "score": {"min": 10, "p25": 50, "median": 58, "mean": 58, "p75": 70, "max": 103, "std": 19},
+    "willingness": {"mean": 0.28, "std": 0.21, "frac_lt_0_3": 0.58, "frac_gt_0_7": 0.05, "solo_w_mean": 0.52},
+    "joint": {"pearson_sw": -0.10, "avg_formula_a_cost": 157},
+    "probes": {
+      "best_solo_delta_per_task_mean": [70.0, 73.3],
+      "second_solo_delta_ratio":       [0.900, 0.933],
+      "combo_vs_solo_synergy_mean":    [-40.0, -33.3],
+      "combo_vs_solo_synergy_std":     [10.67, 12.00],
+      "frac_synergy_gt_neg10":         [0.0000, 0.0333],
+      "singleton_only_coverage":       "20/40",
+      "solo_opt_conflict_loss_per_task": [33.33, 35.00],
+      "top2_solo_matching_coverage":    [0.467, 0.500],
+      "top1_solo_courier_collision_ratio": [0.533, 0.567],
+      "best_solo_delta_p10":             [56.67, 60.00],
+      "solo_dominates_combo_frac":       [0.967, 1.000]
+    },
+    "tags": ["scarce", "courier_ratio<<2", "high solo conflict (~34/task)", "top2 cannot recover top1 conflicts"]
+  },
+
+  "large_seed301": {
+    "structural": {"n_tasks": 40, "n_couriers": 80, "courier_ratio": 2.06, "pool_depth": 844.5, "total_n_candidates": 33780},
+    "bundle": {"combo_ratio": 0.905, "avg_bundle_size": 1.905, "max_bundle_size": 2},
+    "score": {"min": 10, "p25": 42.7, "median": 56.06, "mean": 56.39, "p75": 69.7, "max": 100, "std": 19.19},
+    "willingness": {"mean": 0.300, "std": 0.216, "frac_lt_0_3": 0.587, "frac_gt_0_7": 0.063, "solo_w_mean": 0.52},
+    "joint": {"pearson_sw": -0.129, "avg_formula_a_cost": 151.9},
+    "probes": {
+      "best_solo_delta_per_task_mean": [76.7, 80.0],
+      "second_solo_delta_ratio":       [0.933, 0.967],
+      "combo_vs_solo_synergy_mean":    [-40.0, -33.3],
+      "combo_vs_solo_synergy_std":     [10.67, 12.00],
+      "frac_synergy_gt_neg10":         [0.0000, 0.0333],
+      "singleton_only_coverage":       "31/40",
+      "solo_opt_conflict_loss_per_task": [0.00, 1.67],
+      "top2_solo_matching_coverage":    [0.967, 1.000],
+      "top1_solo_courier_collision_ratio": [0.267, 0.300],
+      "best_solo_delta_p10":             [70.00, 73.33],
+      "solo_dominates_combo_frac":       [0.967, 1.000]
+    },
+    "underlying_solo_distribution": {
+      "solo_s": "TruncNormal(30, 12, [10, 50])",
+      "solo_w": "Beta(1.6, 1.4) -> mean 0.53, std 0.25"
+    },
+    "tags": ["large", "near ILP lower bound (v9 gap ~+0.42/task)"]
+  },
+
+  "large_seed302": {
+    "structural": {"n_tasks": 40, "n_couriers": 82.5, "courier_ratio": 2.06, "pool_depth": 825, "total_n_candidates": 33000},
+    "bundle": {"combo_ratio": 0.92, "avg_bundle_size": 1.87, "max_bundle_size": 2},
+    "score": {"min": 10, "p25": 50, "median": 58, "mean": 58, "p75": 70, "max": 103, "std": 19},
+    "willingness": {"mean": 0.32, "std": 0.21, "frac_lt_0_3": 0.58, "frac_gt_0_7": 0.05, "solo_w_mean": 0.52},
+    "joint": {"pearson_sw": -0.17, "avg_formula_a_cost": 150},
+    "probes": {
+      "best_solo_delta_per_task_mean": [76.7, 80.0],
+      "second_solo_delta_ratio":       [0.967, 1.000],
+      "combo_vs_solo_synergy_mean":    [-40.0, -33.3],
+      "combo_vs_solo_synergy_std":     [10.67, 12.00],
+      "frac_synergy_gt_neg10":         [0.0000, 0.0333],
+      "singleton_only_coverage":       "30/40",
+      "solo_opt_conflict_loss_per_task": [0.00, 1.67],
+      "top2_solo_matching_coverage":    [0.967, 1.000],
+      "top1_solo_courier_collision_ratio": [0.167, 0.200],
+      "best_solo_delta_p10":             [70.00, 73.33],
+      "solo_dominates_combo_frac":       [0.967, 1.000]
+    },
+    "tags": ["large", "second_ratio near 1.0", "low top1_collision (well-separated)"]
+  },
+
+  "_cross_bucket_facts": {
+    "max_bundle_size_invariant": 2,
+    "combo_derivation_law": {
+      "combo_s": "solo_s(T1,C) + solo_s(T2,C) + N(-0.10, 7.0); corr +0.92",
+      "combo_w": "(2*min(w1,w2) + max(w1,w2))/3 - offset + N(0, 0.05); offset normal=0.20, low_w=0.13",
+      "score_w_dim_decoupling": "corr(combo_w_drop, sum_solo_s) ~ 0",
+      "solo_closure": "100% combos have matching (T1,C) and (T2,C) solos"
+    },
+    "solo_dominates_combo_law": "All 10 buckets fall into [0.967, 1.000): combo rarely beats best-cross-courier solo pair (probe #40)."
+  }
+}
