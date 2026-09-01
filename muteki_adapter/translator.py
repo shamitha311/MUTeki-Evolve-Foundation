@@ -223,6 +223,22 @@ def build_start_payload(
         "codex": "responses",
         "claude": "",
         "cursor": "",
+        # grok, kimi, opencode, dsh, pi, omp: all empty (driver-managed)
+    }
+    # Source-verified auth mode per engine.
+    # credential_accounts.py:226-284: claude/codex=subscription, others=api_key.
+    # "cursor" uses api_key (CURSOR_API_KEY); "codex" needs auth.json subscription.
+    _ENGINE_AUTH: dict[str, str] = {
+        "codex":  "subscription",  # codex login → ~/.codex/auth.json
+        "claude": "subscription",  # claude login → CLAUDE_CODE_OAUTH_TOKEN
+        "pi":     "subscription",
+        "omp":    "subscription",
+        # All others: API key stored as API_KEY file → injected as env var
+        "grok":     "api_key",  # → XAI_API_KEY
+        "kimi":     "api_key",  # → KIMI_CODE_HOME or API_KEY
+        "cursor":   "api_key",  # → CURSOR_API_KEY
+        "opencode": "api_key",  # → OPENAI_API_KEY / OPENCODE_API_KEY
+        "dsh":      "api_key",  # → API_KEY
     }
     # Source-verified default credential_account names.
     _ENGINE_CREDENTIAL: dict[str, str] = {
@@ -239,11 +255,14 @@ def build_start_payload(
 
     transport = _ENGINE_TRANSPORT.get(worker_engine, worker_engine)
     wire_api = _ENGINE_WIRE_API.get(worker_engine, "")
+    auth = _ENGINE_AUTH.get(worker_engine, "api_key")
     credential_account = _ENGINE_CREDENTIAL.get(worker_engine, f"{worker_engine}-main")
 
-    # Profile id: "{engine}-sub-local" for local subscription workers,
-    # matching the canonical pattern from _canonical_profile_id() in worker_config.py.
-    profile_id = f"{worker_engine}-sub-local"
+    # Profile id: "{engine}-api-local" for api_key engines,
+    # "{engine}-sub-local" for subscription engines — mirrors the naming convention
+    # used in worker_config.py::DEFAULT_WORKER_PROFILES.
+    profile_suffix = "api" if auth == "api_key" else "sub"
+    profile_id = f"{worker_engine}-{profile_suffix}-local"
 
     # Build the strategy-derived prompt.  This is how the strategy reaches Muteki
     # as actual text — the Challenge description carries objectives, and the
@@ -266,8 +285,11 @@ def build_start_payload(
                 "name":               profile_id,
                 "engine":             worker_engine,
                 "transport":          transport,
-                "auth":               "subscription",
-                "credential_mode":    "subscription",
+                # auth/credential_mode are ENGINE-specific (not all engines use
+                # subscription): codex/claude → subscription; grok/kimi/cursor/
+                # opencode/dsh → api_key (key injected as XAI_API_KEY etc).
+                "auth":               auth,
+                "credential_mode":    auth,
                 "credential_account": credential_account,
                 "api_key_ref":        "",
                 "base_url":           "",

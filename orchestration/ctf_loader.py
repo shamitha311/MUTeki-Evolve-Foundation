@@ -36,8 +36,6 @@ __all__ = ["load_ctf_targets", "CTF_TARGETS"]
 # Approved target definitions
 # ---------------------------------------------------------------------------
 
-#: testphp.vulnweb.com — Acunetix intentionally vulnerable demo app.
-#: This is a permanent, public demo target; scanning it is explicitly legal.
 _VULNWEB_TESTPHP = SandboxTarget(
     id="vulnweb-testphp",
     name="testphp.vulnweb.com Assessment",
@@ -50,8 +48,29 @@ _VULNWEB_TESTPHP = SandboxTarget(
     runtime_reference="http://testphp.vulnweb.com",
 )
 
+#: localhost:18080 — local integration test target.
+#: Used by integration/run_real.py to prove the event-emission pipeline works
+#: without any network access. Codex will attempt to investigate it; what matters
+#: is that Muteki starts and emits events, not that the challenge is solved.
+_LOCALHOST_INTEGRATION = SandboxTarget(
+    id="localhost-integration",
+    name="Local Integration Test Target",
+    description=(
+        "Local sandbox target for integration testing. "
+        "Used to verify the MUTeki-Evolve → Muteki event-emission pipeline "
+        "without requiring internet access or a live CTF target. "
+        "Codex investigates http://localhost:18080; the test validates "
+        "that real events are emitted and normalized — not that the challenge is solved."
+    ),
+    runtime_reference="http://localhost:18080",
+)
+
 #: All pre-approved CTF / pentest sandbox targets exported by this module.
-CTF_TARGETS: tuple[SandboxTarget, ...] = (_VULNWEB_TESTPHP,)
+CTF_TARGETS: tuple[SandboxTarget, ...] = (
+    _VULNWEB_TESTPHP,
+    _LOCALHOST_INTEGRATION,
+)
+
 
 
 # ---------------------------------------------------------------------------

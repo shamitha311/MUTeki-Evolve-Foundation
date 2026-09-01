@@ -1161,7 +1161,7 @@ def _swarm_driver(body: dict[str, Any], mgr: RunManager | None = None) -> Driver
             raise
         finally:
             if not deferred_cleanup:
-                original = sys.exception()
+                original = sys.exc_info()[1]
                 cleanup_failures: list[BaseException] = []
                 try:
                     await sandbox.shutdown_all()

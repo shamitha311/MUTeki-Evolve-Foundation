@@ -10,7 +10,19 @@ from __future__ import annotations
 
 import re
 from enum import Enum
-from typing import Literal, Never, Optional
+from typing import Literal, Optional
+
+# typing.Never was added in Python 3.11. Provide a fallback for 3.10.
+try:
+    from typing import Never  # type: ignore[attr-defined]
+except ImportError:
+    try:
+        from typing_extensions import Never  # type: ignore[import]
+    except ImportError:
+        # Minimal stub — Never is only used as a type annotation in this module,
+        # not at runtime, so a placeholder type is safe.
+        Never = type("Never", (), {})  # type: ignore[assignment,misc]
+
 
 from pydantic import BaseModel, Field
 

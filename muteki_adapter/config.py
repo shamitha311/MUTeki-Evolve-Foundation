@@ -30,7 +30,27 @@ Environment variables:
   MUTEKI_WORKER_ENGINE
       Engine identifier for the worker profile sent to Muteki.
       Maps to the "engine" field in the worker_profiles list.
-      Default: "codex".
+      Default: "grok" (uses XAI_API_KEY — no subscription required).
+      Alternatives: "codex" (Codex CLI subscription), "claude" (Claude CLI subscription),
+        "kimi", "opencode", "dsh" (all accept API_KEY).
+
+  XAI_API_KEY
+      xAI API key for the Grok engine worker. Required when MUTEKI_WORKER_ENGINE=grok
+      in real mode. Set in environment or .env file. The Grok CLI reads this
+      automatically from its environment — no `grok login` needed when using an API key.
+      Get yours at: https://console.x.ai
+      Default: "" (must be provided for real mode with grok).
+
+  MUTEKI_WORKER_MODEL
+      Model override passed to the worker profile's "model" field.
+      Leave empty (default) — the CLI picks its own model from the authenticated
+      account. Set to e.g. "grok-3" or "grok-3-mini" to force a specific model.
+      Default: "" (empty — CLI picks its own).
+
+  MUTEKI_WORKER_BACKEND
+      Execution backend for the worker: "local" (host subprocess) or
+      "container" (Docker). Mirrors MUTEKI_WORKER_BACKEND upstream.
+      Default: "local".
 
   MUTEKI_SESSIONS_ROOT
       Directory where Muteki's RunManager stores session JSONL files. Mirrors
@@ -41,6 +61,8 @@ Environment variables:
 from __future__ import annotations
 
 import os
+from pathlib import Path
+
 
 __all__ = ["AdapterConfig", "load_config"]
 
@@ -57,6 +79,8 @@ class AdapterConfig:
         sessions_root: str = "sessions",
         backend_url: str = "",
         worker_engine: str = "codex",
+        worker_model: str = "",
+        worker_backend: str = "local",
     ) -> None:
         if timeout_seconds <= 0:
             raise ValueError("timeout_seconds must be positive")
@@ -64,13 +88,18 @@ class AdapterConfig:
             raise ValueError("event_timeout_seconds must be positive")
         if mode not in ("real", "mock_bridge"):
             raise ValueError(f"mode must be 'real' or 'mock_bridge', got: {mode!r}")
+        if worker_backend not in ("local", "container"):
+            raise ValueError(f"worker_backend must be 'local' or 'container', got: {worker_backend!r}")
         self.timeout_seconds = float(timeout_seconds)
         self.event_timeout_seconds = float(event_timeout_seconds)
         self.mode = mode
         self.sessions_root = str(sessions_root) or "sessions"
         # Strip trailing slash for consistent URL construction.
         self.backend_url = str(backend_url).rstrip("/") if backend_url else ""
-        self.worker_engine = str(worker_engine) if worker_engine else "codex"
+        self.worker_engine = str(worker_engine) if worker_engine else "grok"
+        # model="" → CLI picks its own model from authenticated account.
+        self.worker_model = str(worker_model) if worker_model else ""
+        self.worker_backend = str(worker_backend) if worker_backend else "local"
 
     @property
     def http_mode(self) -> bool:
@@ -83,7 +112,9 @@ class AdapterConfig:
             f"timeout_seconds={self.timeout_seconds}, "
             f"sessions_root={self.sessions_root!r}, "
             f"backend_url={self.backend_url!r}, "
-            f"worker_engine={self.worker_engine!r})"
+            f"worker_engine={self.worker_engine!r}, "
+            f"worker_model={self.worker_model!r}, "
+            f"worker_backend={self.worker_backend!r})"
         )
 
 
@@ -106,11 +137,22 @@ def load_config() -> AdapterConfig:
     Callers may also construct AdapterConfig directly to override values
     in tests without touching the environment.
     """
+    # Auto-configure MUTEKI_GROK_BIN if unset, pointing to bundled bridge binary
+    if not os.environ.get("MUTEKI_GROK_BIN"):
+        project_root = Path(__file__).resolve().parent.parent
+        bin_ext = ".cmd" if os.name == "nt" else ""
+        bundled_bin = project_root / "bin" / f"grok{bin_ext}"
+        if bundled_bin.exists():
+            os.environ["MUTEKI_GROK_BIN"] = str(bundled_bin)
+
     return AdapterConfig(
         timeout_seconds=_env_float("MUTEKI_TIMEOUT_SECONDS", 300.0),
         event_timeout_seconds=_env_float("MUTEKI_EVENT_TIMEOUT_SECONDS", 30.0),
         mode=_env_str("MUTEKI_MODE", "mock_bridge"),
         sessions_root=_env_str("MUTEKI_SESSIONS_ROOT", "sessions"),
         backend_url=_env_str("MUTEKI_BACKEND", ""),
-        worker_engine=_env_str("MUTEKI_WORKER_ENGINE", "codex"),
+        worker_engine=_env_str("MUTEKI_WORKER_ENGINE", "grok"),
+        worker_model=_env_str("MUTEKI_WORKER_MODEL", ""),
+        worker_backend=_env_str("MUTEKI_WORKER_BACKEND", "local"),
     )
+

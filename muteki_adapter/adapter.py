@@ -147,7 +147,10 @@ async def _real_swarm_driver(
             ) from exc
 
         payload = build_start_payload(
-            target, strategy, run_id, worker_engine=cfg.worker_engine
+            target, strategy, run_id,
+            worker_engine=cfg.worker_engine,
+            worker_model=cfg.worker_model,
+            worker_backend=cfg.worker_backend,
         )
         url = f"{cfg.backend_url}/api/runs/{run_id}/start"
         LOG.info("_real_swarm_driver: HTTP POST %s engine=%s", url, cfg.worker_engine)
@@ -171,33 +174,61 @@ async def _real_swarm_driver(
         # In HTTP mode the server handles the swarm; nothing more to do here.
         return
 
-    # ── In-process mode: requires Docker + LLM ───────────────────────────────
+    # ── In-process mode: build_driver() via the real web driver stack ─────────
+    #
+    # Source reference: vendor/muteki/apps/web/drivers.py::build_driver(body, mgr)
+    # We build the same request body that the web API accepts and pass it
+    # directly to build_driver(), bypassing the HTTP layer.
+    #
+    # Pre-conditions for this path:
+    #   - Codex CLI must be on PATH and authenticated (codex login)
+    #   - MUTEKI_WORKER_BACKEND=local or container (Docker)
+    #   - No MUTEKI_BACKEND set (otherwise we'd have taken the HTTP branch)
+    if target is None or strategy is None or not run_id:
+        raise MutekiUnavailableError(
+            "_real_swarm_driver: in-process mode requires target, strategy, and run_id. "
+            "Set MUTEKI_MODE=mock_bridge for environments without Codex on PATH."
+        )
+
+    # Build the real /start request body (source-verified schema).
+    from muteki_adapter.translator import build_start_payload  # noqa: PLC0415
+    body = build_start_payload(
+        target, strategy, run_id,
+        worker_engine=cfg.worker_engine,
+        worker_model=cfg.worker_model,
+        worker_backend=cfg.worker_backend,
+    )
+
     try:
         from apps.web.drivers import build_driver  # type: ignore[import]
-    except ImportError:
-        pass
-
-    try:
-        from muteki.swarm.swarm import Swarm  # type: ignore[import]
     except ImportError as exc:
         raise MutekiUnavailableError(
-            f"Cannot import Muteki Swarm coordinator: {exc}"
+            f"Cannot import Muteki build_driver from apps.web.drivers: {exc}. "
+            "Ensure vendor/muteki is on PYTHONPATH and its dependencies are installed. "
+            "Alternatively set MUTEKI_MODE=mock_bridge."
         ) from exc
 
-    # The Swarm coordinator requires a full worker lineup and sandbox. In real
-    # mode the adapter defers to the web driver infrastructure rather than
-    # constructing a Swarm directly, since the web driver has the complete
-    # worker-config / sandbox-manager wiring.
-    #
-    # LIMITATION: In this environment, real mode cannot be end-to-end verified.
-    # The adapter falls back to raising MutekiUnavailableError with a clear
-    # diagnostic message. See docs/MUTEKI_INTEGRATION_LIMITATIONS.md.
-    raise MutekiUnavailableError(
-        "RealMutekiAdapter real mode (in-process) requires Docker and LLM credentials. "
-        "Set MUTEKI_BACKEND=http://127.0.0.1:8000 for HTTP mode, or "
-        "MUTEKI_MODE=mock_bridge for environments without these dependencies. "
-        "See docs/MUTEKI_INTEGRATION_LIMITATIONS.md for details."
+    try:
+        # RunManager (mgr) is accessed via the run object's __module__ parent;
+        # build_driver only needs the body — it returns a coroutine driver function.
+        real_driver = build_driver(body, mgr=None)  # mgr=None: no run registry needed
+    except Exception as exc:
+        # build_driver raises ValueError/RuntimeError for missing credentials or
+        # unavailable engines — surface these as precise diagnostics.
+        raise MutekiUnavailableError(
+            f"Muteki build_driver() failed: {type(exc).__name__}: {exc}. "
+            "Check that the Codex CLI is installed, authenticated, and on PATH. "
+            "Run: codex --version   (must succeed) "
+            "Run: codex login       (if not authenticated) "
+            "Alternatively set MUTEKI_MODE=mock_bridge."
+        ) from exc
+
+    LOG.info(
+        "_real_swarm_driver: in-process swarm driver built engine=%s run_id=%s",
+        cfg.worker_engine, run_id,
     )
+    # Invoke the driver with the run object so Muteki starts the real swarm.
+    await real_driver(run)
 
 
 # ---------------------------------------------------------------------------

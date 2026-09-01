@@ -69,3 +69,7 @@ sessions/
 vendor/*/.git/
 vendor/*/.venv/
 vendor/*/.pythonlibs/
+# Secrets
+.env
+.env.*
+!.env.example
