@@ -273,21 +273,8 @@ def normalize_event(
     run_id: str,
     sequence_counter: int,
 ) -> InvestigationEvent | None:
-    """Translate one Muteki Event into a project-owned InvestigationEvent.
-
-    Args:
-        muteki_event: A muteki.core.events.Event instance.
-        run_id: The adapter's run identifier (used if event.run_id is absent).
-        sequence_counter: Monotonic adapter-level counter, used when
-            muteki_event.seq is 0 or unavailable.
-
-    Returns:
-        InvestigationEvent, or None if the event is internal-only and carries
-        no application-meaningful information (e.g., pure UI scaffolding).
-
-    Note: Even filtered event types return None gracefully rather than raising,
-    so the caller's event loop is never interrupted by a normalization edge case.
-    """
+    if muteki_event is None:
+        return None
     try:
         event_type_value: str = getattr(muteki_event, "event_type", None)
         if hasattr(event_type_value, "value"):
@@ -303,7 +290,8 @@ def normalize_event(
         ts_raw = getattr(muteki_event, "ts", 0.0) or 0.0
         timestamp = _epoch_to_iso(float(ts_raw)) if ts_raw else _now_iso()
 
-        event_run_id = str(getattr(muteki_event, "run_id", "") or run_id or "unknown")
+        raw_event_run_id = getattr(muteki_event, "run_id", None)
+        event_run_id = str(raw_event_run_id) if raw_event_run_id else str(run_id or "unknown")
 
         solver_id = getattr(muteki_event, "solver_id", None)
         worker_id: str | None = str(solver_id) if solver_id else None

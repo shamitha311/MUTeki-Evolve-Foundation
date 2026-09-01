@@ -42,7 +42,7 @@ def _make_event(
     event_type: str = "run.started",
     seq: int = 5,
     ts: float | None = None,
-    run_id: str = "test-run",
+    run_id: str = "",
     solver_id: str | None = None,
     payload: dict[str, Any] | None = None,
 ) -> Any:

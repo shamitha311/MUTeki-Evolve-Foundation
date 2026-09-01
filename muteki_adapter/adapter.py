@@ -60,6 +60,8 @@ from muteki_adapter.validators import validate_adapter_inputs
 
 LOG = logging.getLogger(__name__)
 
+RunManager: Any = None
+
 __all__ = ["RealMutekiAdapter"]
 
 
@@ -178,14 +180,17 @@ class RealMutekiAdapter:
 
         Each run_strategy call gets its own RunManager to provide isolation.
         """
+        run_mgr_cls = RunManager
+        if run_mgr_cls is None:
+            try:
+                from apps.web.run_manager import RunManager as _RM  # type: ignore[import]
+                run_mgr_cls = _RM
+            except ImportError as exc:
+                raise MutekiUnavailableError(
+                    f"Cannot import Muteki RunManager: {exc}"
+                ) from exc
         try:
-            from apps.web.run_manager import RunManager  # type: ignore[import]
-        except ImportError as exc:
-            raise MutekiUnavailableError(
-                f"Cannot import Muteki RunManager: {exc}"
-            ) from exc
-        try:
-            return RunManager(sessions_root=self._config.sessions_root)
+            return run_mgr_cls(sessions_root=self._config.sessions_root)
         except Exception as exc:
             raise MutekiRunCreationError(
                 f"RunManager construction failed: {type(exc).__name__}: {exc}"

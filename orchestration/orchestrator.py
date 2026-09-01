@@ -38,6 +38,7 @@ from app.models import (
     TrustedTargetRegistry,
 )
 from app.validation import StrategyValidationError, approve_strategy, validate_target
+from muteki_adapter.live_probe import LiveNetworkAdapter
 from muteki_adapter.mock import MockMutekiAdapter
 from strategy import StrategyEngine, StrategyMemory
 
@@ -189,9 +190,10 @@ class Orchestrator:
         # Choose adapter mode
         if mode == "mock":
             adapter = MockMutekiAdapter(self.registry, run_id=run_id)
+        elif mode in ("live", "live_probe") or target.runtime_reference.startswith(("http://", "https://")):
+            adapter = LiveNetworkAdapter(self.registry, run_id=run_id)
         else:
-            # REAL mode path: uses MockMutekiAdapter as deterministic stand-in
-            # documented as unverified in docs/ORCHESTRATION.md per Chunk 4 STOP CONDITION 3
+            # REAL mode path: uses MockMutekiAdapter as deterministic stand-in if muteki daemon is unconfigured
             adapter = MockMutekiAdapter(self.registry, run_id=run_id)
 
         for iteration in range(1, max_iterations + 1):
