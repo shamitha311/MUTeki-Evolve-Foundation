@@ -14,8 +14,14 @@ Muteki integration modes:
     driver. This exercises the real RunManager → EventBus → SessionStore →
     event normalization pipeline against real Muteki event objects.
 
-  "real":
-    Passes a real swarm driver to RunManager. Requires Docker and LLM credentials.
+  "real" with MUTEKI_BACKEND set (HTTP mode):
+    Calls the remote Muteki web API to create + start a run with the
+    configured worker engine (MUTEKI_WORKER_ENGINE, default "codex"), then
+    consumes the SSE stream from GET /api/runs/{run_id}/events.
+    Requires a running Muteki backend and LLM credentials server-side.
+
+  "real" without MUTEKI_BACKEND (in-process mode):
+    Passes a real swarm driver to RunManager. Requires Docker and LLM creds.
     Fails closed with MutekiUnavailableError if unavailable.
 
 Architecture reference: docs/INTEGRATION_CONTRACT.md §3 (run_strategy),
@@ -33,10 +39,12 @@ STOP CONDITIONS (docs/MUTEKI_INTEGRATION_LIMITATIONS.md):
 from __future__ import annotations
 
 import asyncio
+import json
 import logging
 import time
 import uuid
 from collections.abc import AsyncIterator
+from typing import Any
 
 from app.models import (
     InvestigationEvent,
@@ -55,7 +63,7 @@ from muteki_adapter.errors import (
 )
 from muteki_adapter.event_normalizer import is_run_terminal, normalize_event
 from muteki_adapter.result_normalizer import normalize_result
-from muteki_adapter.translator import translate_strategy_to_challenge
+from muteki_adapter.translator import build_start_payload, translate_strategy_to_challenge
 from muteki_adapter.validators import validate_adapter_inputs
 
 LOG = logging.getLogger(__name__)
@@ -101,18 +109,69 @@ async def _mock_bridge_driver(run: "Any") -> None:
     await run_mock_solve(bus=run.bus, cost=cost, run_id=run.run_id)
 
 
-async def _real_swarm_driver(run: "Any", challenge: "Any") -> None:
+async def _real_swarm_driver(
+    run: "Any",
+    challenge: "Any",
+    *,
+    config: "AdapterConfig | None" = None,
+    target: "SandboxTarget | None" = None,
+    strategy: "Strategy | None" = None,
+    run_id: str = "",
+) -> None:
     """Real Muteki swarm driver.
 
-    Starts a real Swarm coordinator with the provided Challenge.
-    Requires Docker (for container workers) and LLM credentials.
+    HTTP mode (MUTEKI_BACKEND set):
+      POSTs the codex worker-profile payload to the Muteki web API and lets
+      the server orchestrate the swarm. The caller then streams events over
+      SSE. This function returns immediately after a successful start; the
+      event collection loop in run_strategy drives the rest.
+
+    In-process mode (no MUTEKI_BACKEND):
+      Starts a real Swarm coordinator with the provided Challenge.
+      Requires Docker (for container workers) and LLM credentials.
+      Fails closed with MutekiUnavailableError if unavailable.
 
     Source reference: vendor/muteki/muteki/swarm/swarm.py,
                       vendor/muteki/apps/web/drivers.py
-
-    This driver is defined but NOT verified runnable in environments without
-    Docker and LLM credentials (see docs/MUTEKI_INTEGRATION_LIMITATIONS.md).
     """
+    cfg = config or load_config()
+
+    # ── HTTP mode: delegate to the remote Muteki web API ─────────────────────
+    if cfg.http_mode and target is not None and strategy is not None and run_id:
+        try:
+            import httpx  # type: ignore[import]
+        except ImportError as exc:
+            raise MutekiUnavailableError(
+                "httpx is required for HTTP mode (pip install httpx). "
+                "Alternatively set MUTEKI_MODE=mock_bridge."
+            ) from exc
+
+        payload = build_start_payload(
+            target, strategy, run_id, worker_engine=cfg.worker_engine
+        )
+        url = f"{cfg.backend_url}/api/runs/{run_id}/start"
+        LOG.info("_real_swarm_driver: HTTP POST %s engine=%s", url, cfg.worker_engine)
+        try:
+            async with httpx.AsyncClient(timeout=30.0) as client:
+                resp = await client.post(url, json=payload)
+                resp.raise_for_status()
+                LOG.info(
+                    "_real_swarm_driver: Muteki run started via HTTP run_id=%s status=%s",
+                    run_id, resp.status_code,
+                )
+        except httpx.HTTPStatusError as exc:
+            raise MutekiRunCreationError(
+                f"Muteki /api/runs/{run_id}/start returned HTTP {exc.response.status_code}: "
+                f"{exc.response.text[:500]}"
+            ) from exc
+        except httpx.RequestError as exc:
+            raise MutekiUnavailableError(
+                f"Cannot reach Muteki backend at {cfg.backend_url}: {exc}"
+            ) from exc
+        # In HTTP mode the server handles the swarm; nothing more to do here.
+        return
+
+    # ── In-process mode: requires Docker + LLM ───────────────────────────────
     try:
         from apps.web.drivers import build_driver  # type: ignore[import]
     except ImportError:
@@ -134,8 +193,9 @@ async def _real_swarm_driver(run: "Any", challenge: "Any") -> None:
     # The adapter falls back to raising MutekiUnavailableError with a clear
     # diagnostic message. See docs/MUTEKI_INTEGRATION_LIMITATIONS.md.
     raise MutekiUnavailableError(
-        "RealMutekiAdapter real mode requires Docker and LLM credentials. "
-        "Set MUTEKI_MODE=mock_bridge for environments without these dependencies. "
+        "RealMutekiAdapter real mode (in-process) requires Docker and LLM credentials. "
+        "Set MUTEKI_BACKEND=http://127.0.0.1:8000 for HTTP mode, or "
+        "MUTEKI_MODE=mock_bridge for environments without these dependencies. "
         "See docs/MUTEKI_INTEGRATION_LIMITATIONS.md for details."
     )
 
@@ -260,7 +320,14 @@ class RealMutekiAdapter:
                 await _mock_bridge_driver(run_obj)
         else:
             async def driver(run_obj: "Any") -> None:
-                await _real_swarm_driver(run_obj, challenge)
+                await _real_swarm_driver(
+                    run_obj,
+                    challenge,
+                    config=self._config,
+                    target=target,
+                    strategy=validated_strategy,
+                    run_id=run_id,
+                )
 
         try:
             run = await mgr.start(run_id, driver)

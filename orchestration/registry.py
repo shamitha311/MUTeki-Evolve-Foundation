@@ -13,8 +13,14 @@ _DEMO_TARGET = SandboxTarget(
 def get_default_target_registry() -> TrustedTargetRegistry:
     """Return a TrustedTargetRegistry containing pre-approved trusted sandbox targets.
 
+    Includes the fixture demo target (for contract tests) and all pre-approved
+    CTF / pentest sandbox targets defined in orchestration.ctf_loader.
+
     Arbitrary client runtime_references or untrusted target IDs are rejected.
     """
+    from orchestration.ctf_loader import load_ctf_targets  # local import avoids circular
+
     registry = TrustedTargetRegistry()
     registry.register(_DEMO_TARGET)
+    load_ctf_targets(registry)
     return registry

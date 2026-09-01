@@ -24,7 +24,7 @@ from typing import Any
 from app.models import SandboxTarget, Strategy
 from app.validation import StrategyValidationError
 
-__all__ = ["translate_strategy_to_challenge", "SAFE_CATEGORIES"]
+__all__ = ["translate_strategy_to_challenge", "build_start_payload", "SAFE_CATEGORIES"]
 
 # Exact set of categories Muteki's Challenge model accepts (from source).
 # Only these are allowed through — any other context value defaults to "misc".
@@ -147,6 +147,162 @@ def translate_strategy_to_challenge(
     )
 
     return challenge
+
+
+
+def build_start_payload(
+    target: SandboxTarget,
+    strategy: Strategy,
+    run_id: str,
+    worker_engine: str = "codex",
+    worker_model: str = "",
+    worker_backend: str = "local",
+) -> dict:
+    """Build the JSON body for POST /api/runs/{run_id}/start.
+
+    Produces the complete request payload consumed by Muteki's build_driver()
+    entrypoint. Schema is SOURCE-VERIFIED against:
+      - apps/web/drivers.py::_swarm_driver (knobs section)
+      - apps/web/worker_config.py::DEFAULT_WORKER_PROFILES
+
+    Source-verified profile schema (worker_config.py:105):
+      {id, name, engine, transport, auth, credential_mode, credential_account,
+       api_key_ref, base_url, wire_api, roles, race, max_running,
+       max_review_running, priority, model, enabled}
+
+    Transport aliases (worker_profiles.py:24):
+      "codex"   → engine "codex"   | transport "codex_cli"
+      "claude"  → engine "claude"  | transport "claude_code"
+      "cursor"  → engine "cursor"  | transport "cursor_agent"
+      "omp"     → engine "omp"     | transport "omp"
+
+    Model field:
+      Intentionally empty ("") → Codex CLI uses the authenticated account's
+      default model. Set MUTEKI_WORKER_MODEL to override (e.g. "o3-mini").
+      Do NOT hardcode a model name — the CLI installation picks the model.
+
+    Credential:
+      "codex-main" is the default credential_account name for Codex.
+      Codex CLI uses a subscription (logged-in account via `codex` CLI),
+      NOT an API key. auth="subscription", credential_mode="subscription".
+
+    Args:
+        target:         Trusted SandboxTarget (runtime_reference → challenge.target).
+        strategy:       Approved Strategy (objective/priorities → description/prompt).
+        run_id:         Muteki run ID (→ challenge.id).
+        worker_engine:  Base engine name ("codex", "claude", etc.). Default "codex".
+        worker_model:   Model override (default "" = CLI picks its own).
+        worker_backend: "local" (host subprocess) or "container" (Docker).
+
+    Returns:
+        dict — the complete /api/runs/{run_id}/start request body.
+
+    Security invariant: challenge.target comes ONLY from target.runtime_reference,
+    never from strategy fields.
+    """
+    _assert_strategy_safe_for_translation(strategy)
+
+    category = _safe_category(strategy.context)
+    description = _build_description(strategy)
+    name = _build_name(strategy, target)
+
+    # Source-verified transport map (worker_profiles.py::TRANSPORT_TO_ENGINE).
+    _ENGINE_TRANSPORT: dict[str, str] = {
+        "codex":    "codex_cli",
+        "claude":   "claude_code",
+        "cursor":   "cursor_agent",
+        "omp":      "omp",
+        "kimi":     "kimi_code",
+        "grok":     "grok_build",
+        "opencode": "opencode_cli",
+        "dsh":      "deepseek_harness",
+        "pi":       "pi",
+    }
+    # Source-verified wire_api per engine (worker_config.py defaults).
+    _ENGINE_WIRE_API: dict[str, str] = {
+        "codex": "responses",
+        "claude": "",
+        "cursor": "",
+    }
+    # Source-verified default credential_account names.
+    _ENGINE_CREDENTIAL: dict[str, str] = {
+        "codex":    "codex-main",
+        "claude":   "claude-main",
+        "cursor":   "cursor-main",
+        "omp":      "omp-main",
+        "kimi":     "kimi-main",
+        "grok":     "grok-main",
+        "opencode": "opencode-main",
+        "dsh":      "dsh-main",
+        "pi":       "pi-main",
+    }
+
+    transport = _ENGINE_TRANSPORT.get(worker_engine, worker_engine)
+    wire_api = _ENGINE_WIRE_API.get(worker_engine, "")
+    credential_account = _ENGINE_CREDENTIAL.get(worker_engine, f"{worker_engine}-main")
+
+    # Profile id: "{engine}-sub-local" for local subscription workers,
+    # matching the canonical pattern from _canonical_profile_id() in worker_config.py.
+    profile_id = f"{worker_engine}-sub-local"
+
+    # Build the strategy-derived prompt.  This is how the strategy reaches Muteki
+    # as actual text — the Challenge description carries objectives, and the
+    # top-level prompt seeds the conversational dispatcher.
+    prompt_parts = [f"Investigate {target.runtime_reference}."]
+    if strategy.objective:
+        prompt_parts.append(strategy.objective[:1000])
+    if strategy.priorities:
+        priorities_text = "; ".join(str(p) for p in strategy.priorities[:5])
+        prompt_parts.append(f"Focus on: {priorities_text}")
+    prompt = " ".join(prompt_parts)[:4000]
+
+    return {
+        # ── Engine + profile roster ─────────────────────────────────────────
+        "engines": [worker_engine],
+        "worker_profiles": [
+            {
+                # Source-verified field set (worker_config.py::DEFAULT_WORKER_PROFILES)
+                "id":                 profile_id,
+                "name":               profile_id,
+                "engine":             worker_engine,
+                "transport":          transport,
+                "auth":               "subscription",
+                "credential_mode":    "subscription",
+                "credential_account": credential_account,
+                "api_key_ref":        "",
+                "base_url":           "",
+                "wire_api":           wire_api,
+                "roles":              ["race", "bootstrap", "explore", "respond"],
+                "race":               True,
+                "max_running":        1,
+                "max_review_running": 0,
+                "priority":           20,
+                # model="" → CLI picks its own model. Set MUTEKI_WORKER_MODEL to override.
+                "model":              worker_model,
+                "enabled":            True,
+            }
+        ],
+        # ── Challenge (strategy injection) ──────────────────────────────────
+        "challenge": {
+            "id":          run_id,
+            "name":        name,
+            "description": description,
+            # SECURITY: target.runtime_reference from trusted target ONLY
+            "target":      target.runtime_reference,
+            "category":    category,
+            "flag_format": _DEFAULT_FLAG_FORMAT,
+            "mode":        "pentest" if strategy.context.get("mode") == "pentest" else "ctf",
+        },
+        # ── Conversational prompt (seeds the coordinator's dispatch plan) ────
+        "prompt": prompt,
+        # ── Execution knobs ─────────────────────────────────────────────────
+        "worker_backend": worker_backend,    # "local" or "container"
+        "coordinator":    True,
+        "race_scout":     False,             # single-engine: no race scout needed
+        "n_solvers":      1,
+        "kind":           "swarm",           # explicit: real solving (not mock)
+    }
+
 
 
 # --- Internal helpers -------------------------------------------------------
