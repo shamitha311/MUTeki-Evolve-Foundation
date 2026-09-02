@@ -57,7 +57,7 @@ export function DemoHeader({ status, roundIndex, onStart, onPause, onNext, onRes
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[15px] font-extrabold tracking-[-.03em]">MUTeki<span className="text-[hsl(var(--chart-2))]">-Evolve</span></span>
-              <span className="rounded-full border border-[hsl(var(--accent)/.55)] bg-[hsl(var(--accent)/.16)] px-2 py-0.5 font-mono-ui text-[9px] font-medium uppercase tracking-[.14em] text-[hsl(var(--primary))]">demo replay</span>
+              <span className="rounded-full border border-[hsl(var(--accent)/.55)] bg-[hsl(var(--accent)/.16)] px-2 py-0.5 font-mono-ui text-[9px] font-medium uppercase tracking-[.14em] text-[hsl(var(--primary))]">live engine</span>
             </div>
             <p className="font-mono-ui text-[10px] text-[hsl(var(--muted-foreground))]">bounded autonomous investigation loop</p>
           </div>
@@ -67,10 +67,10 @@ export function DemoHeader({ status, roundIndex, onStart, onPause, onNext, onRes
             <span className={`size-1.5 rounded-full bg-current ${running ? "pulse-signal" : ""}`} />
             {status.toLowerCase()} · round {Math.min(roundIndex + 1, 3)} / 3
           </span>
-          <button data-testid="button-start-replay" onClick={onStart} disabled={running || completed} className="control-button control-button-primary disabled:cursor-not-allowed disabled:opacity-40"><Play size={13} fill="currentColor" />{completed ? "Replay complete" : "Start replay"}</button>
+          <button data-testid="button-start-replay" onClick={onStart} disabled={running || completed} className="control-button control-button-primary disabled:cursor-not-allowed disabled:opacity-40"><Play size={13} fill="currentColor" />{completed ? "Swarm Complete" : "Run Swarm Strategy"}</button>
           <button data-testid="button-pause-replay" onClick={onPause} disabled={!running} className="control-button disabled:cursor-not-allowed disabled:opacity-40"><Pause size={13} />Pause</button>
           <button data-testid="button-next-round" onClick={onNext} disabled={completed} className="control-button disabled:cursor-not-allowed disabled:opacity-40"><ChevronRight size={14} />Next round</button>
-          <button data-testid="button-reset-replay" onClick={onReset} className="control-button control-button-icon" aria-label="Reset replay"><RotateCcw size={14} /></button>
+          <button data-testid="button-reset-replay" onClick={onReset} className="control-button control-button-icon" aria-label="Reset session"><RotateCcw size={14} /></button>
           <button data-testid="button-auto-play" onClick={onAutoPlay} className={`control-button ${autoPlay ? "control-button-active" : ""}`}><Activity size={14} />Auto play</button>
         </div>
       </div>
