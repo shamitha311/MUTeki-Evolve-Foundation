@@ -42,94 +42,94 @@ PORT = int(os.environ.get("SCRATCH_PORT", "8080"))
 RUN_ID = f"ev-demo-{uuid.uuid4().hex[:8]}"
 
 def _make_sse_events(run_id: str) -> list[dict[str, Any]]:
-    """Build a realistic Muteki SSE event sequence for the given run_id."""
+    """Build a realistic Muteki SSE event sequence for testphp.vulnweb.com."""
     now = time.time()
     return [
         {
             "seq": 1, "event_type": "run.started", "ts": now,
-            "run_id": run_id, "challenge_id": "target-vulnweb",
-            "solver_id": None, "payload": {},
+            "run_id": run_id, "challenge_id": "vulnweb-testphp",
+            "solver_id": None, "payload": {"target": "http://testphp.vulnweb.com"},
         },
         {
             "seq": 2, "event_type": "worker.status", "ts": now + 0.5,
-            "run_id": run_id, "challenge_id": "target-vulnweb",
-            "solver_id": "codex-local-1",
-            "payload": {"online": True, "engine": "codex", "reason": "spawned"},
+            "run_id": run_id, "challenge_id": "vulnweb-testphp",
+            "solver_id": "grok-local-1",
+            "payload": {"online": True, "engine": "grok", "reason": "grok worker spawned with XAI_API_KEY"},
         },
         {
             "seq": 3, "event_type": "blackboard.delta", "ts": now + 1.2,
-            "run_id": run_id, "challenge_id": "target-vulnweb",
-            "solver_id": "codex-local-1",
+            "run_id": run_id, "challenge_id": "vulnweb-testphp",
+            "solver_id": "grok-local-1",
             "payload": {
                 "kind": "fact_added",
-                "fact": "Login form at /userinfo.php accepts unsanitized 'username' input.",
+                "fact": "Target http://testphp.vulnweb.com active: HTTP 200 OK | PHP/8.1, Nginx | Form endpoints at /login.php and /userinfo.php.",
             },
         },
         {
             "seq": 4, "event_type": "blackboard.delta", "ts": now + 2.1,
-            "run_id": run_id, "challenge_id": "target-vulnweb",
-            "solver_id": "codex-local-1",
+            "run_id": run_id, "challenge_id": "vulnweb-testphp",
+            "solver_id": "grok-local-1",
             "payload": {
                 "kind": "intent_proposed",
-                "goal": "Verify SQL injection in /userinfo.php?username parameter",
+                "goal": "Test SQL injection vector at http://testphp.vulnweb.com/userinfo.php?uname=",
             },
         },
         {
             "seq": 5, "event_type": "blackboard.delta", "ts": now + 2.8,
-            "run_id": run_id, "challenge_id": "target-vulnweb",
-            "solver_id": "codex-local-1",
+            "run_id": run_id, "challenge_id": "vulnweb-testphp",
+            "solver_id": "grok-local-1",
             "payload": {
                 "kind": "intent_claimed",
-                "goal": "Verify SQL injection in /userinfo.php?username parameter",
+                "goal": "Test SQL injection vector at http://testphp.vulnweb.com/userinfo.php?uname=",
             },
         },
         {
             "seq": 6, "event_type": "tool.result", "ts": now + 4.0,
-            "run_id": run_id, "challenge_id": "target-vulnweb",
-            "solver_id": "codex-local-1",
+            "run_id": run_id, "challenge_id": "vulnweb-testphp",
+            "solver_id": "grok-local-1",
             "payload": {
                 "tool": "http_request",
                 "result": (
-                    "GET /userinfo.php?username=admin'-- HTTP/1.1 → 200 OK\n"
-                    "Response reveals DB schema: table 'users', columns: id, username, password"
+                    "GET http://testphp.vulnweb.com/userinfo.php?uname=admin'-- → 200 OK\n"
+                    "Database response: UNION SELECT NULL,uname,pass FROM users → user 'test' hash returned."
                 ),
             },
         },
         {
             "seq": 7, "event_type": "blackboard.delta", "ts": now + 5.3,
-            "run_id": run_id, "challenge_id": "target-vulnweb",
-            "solver_id": "codex-local-1",
+            "run_id": run_id, "challenge_id": "vulnweb-testphp",
+            "solver_id": "grok-local-1",
             "payload": {
                 "kind": "fact_added",
-                "fact": "SQL injection confirmed: UNION SELECT NULL,username,password FROM users returns admin hash.",
+                "fact": "SQL injection verified on testphp.vulnweb.com: database columns extracted successfully.",
             },
         },
         {
             "seq": 8, "event_type": "blackboard.delta", "ts": now + 6.0,
-            "run_id": run_id, "challenge_id": "target-vulnweb",
-            "solver_id": "codex-local-1",
+            "run_id": run_id, "challenge_id": "vulnweb-testphp",
+            "solver_id": "grok-local-1",
             "payload": {
                 "kind": "flag_found",
-                "flag": "flag{sql_injection_confirmed_testphp}",
+                "flag": "flag{testphp_vulnweb_sql_injection_verified}",
             },
         },
         {
             "seq": 9, "event_type": "flag.accepted", "ts": now + 6.5,
-            "run_id": run_id, "challenge_id": "target-vulnweb",
-            "solver_id": "codex-local-1",
+            "run_id": run_id, "challenge_id": "vulnweb-testphp",
+            "solver_id": "grok-local-1",
             "payload": {
-                "flag": "flag{sql_injection_confirmed_testphp}",
+                "flag": "flag{testphp_vulnweb_sql_injection_verified}",
                 "verified": True,
             },
         },
         {
             "seq": 10, "event_type": "run.finished", "ts": now + 7.0,
-            "run_id": run_id, "challenge_id": "target-vulnweb",
-            "solver_id": "codex-local-1",
+            "run_id": run_id, "challenge_id": "vulnweb-testphp",
+            "solver_id": "grok-local-1",
             "payload": {
                 "solved": True,
-                "flags": ["flag{sql_injection_confirmed_testphp}"],
-                "reason": "SQL injection confirmed and flag captured successfully",
+                "flags": ["flag{testphp_vulnweb_sql_injection_verified}"],
+                "reason": "Target http://testphp.vulnweb.com assessment completed successfully (Score 100/100)",
             },
         },
     ]
