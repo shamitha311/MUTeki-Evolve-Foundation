@@ -9,7 +9,7 @@
 
 Existing AI security agents execute single-shot prompts that stall when hitting complex barriers. **MUTeki-Evolve** solves this by pairing an **MTASA-inspired Strategy Evolution Loop** (the Brain) with **Muteki's Multi-Agent Swarm Core** (the Muscle).
 
-Instead of guessing raw shell commands, MUTeki-Evolve formulates high-level strategy directives, dispatches autonomous workers (like **xAI Grok**), normalizes evidence, scores progress, and autonomously evolves smarter strategies round-after-round until the objective is solved (100/100).
+Instead of guessing raw shell commands, MUTeki-Evolve formulates high-level strategy directives, dispatches autonomous workers (**xAI Grok**), normalizes evidence, scores progress, and autonomously evolves smarter strategies round-after-round until the target assessment is solved (100/100).
 
 ```text
  ┌─────────────────────────────────────────────────────────────────┐
@@ -31,39 +31,65 @@ Instead of guessing raw shell commands, MUTeki-Evolve formulates high-level stra
 
 ---
 
-## 📸 System Walkthrough & UI Showcase
+## 📸 Step-by-Step UI & System Execution Showcase
 
-### 1. Main Command Center (Trusted Target: `http://testphp.vulnweb.com`)
-The dashboard displays the active target (`testphp.vulnweb.com Assessment Target`), current strategy objective, evidence ledger, and real-time score progression.
-
-![MUTeki-Evolve Command Center Desktop](screenshots/muteki-evolve-desktop-final.jpg)
-
-### 2. Multi-Round Strategy Evolution (Revision A → Revision B → Revision C)
-- **Round 1 (Revision A)**: Deploys a *Reconnaissance-first* strategy to map the target surface. Progress score: **28/100**.
-- **Round 2 (Revision B)**: Analyzes evidence signals and shifts focus to *Authentication & SQL Injection vectors*. Progress score: **72/100**.
-- **Round 3 (Revision C)**: Verifies captured hashes and completes the assessment. Progress score: **100/100 (SOLVED)**.
-
-![MUTeki-Evolve Mobile / Responsive View](screenshots/muteki-evolve-mobile-final.jpg)
+### 1. Base UI Console (`http://testphp.vulnweb.com` Active Target)
+![01 - Base UI Console](screenshots/01-base-ui.png)
+*Initial Command Center interface configured with `testphp.vulnweb.com` as the active trusted assessment target.*
 
 ---
 
-## 🔍 Visual Proof & Technical Architecture
+### 2. Round 1 Execution — Strategy Revision 1 (Reconnaissance-First)
+![02 - Round 1 Reconnaissance](screenshots/02-round1-reconnaissance.png)
+*MUTeki-Evolve formulates Revision 1 (Reconnaissance-first), capturing initial surface signals with a progress score of 28/100.*
 
-### 1. Isolated Ubuntu VM Execution via SSH
-All operations execute inside a disposable, sandboxed Ubuntu VM (`vboxuser@Linux` / `SSH: 192.168.56.101`) to ensure complete containment.
+---
 
-### 2. Grok AI Engine & Zero-Dependency CLI Bridge (`tools/grok_cli.py`)
-We built a standalone CLI bridge (`tools/grok_cli.py` and `bin/grok`) that routes Muteki driver prompts directly to xAI's API (`api.x.ai`) using `XAI_API_KEY`—eliminating any requirement for paid CLI web subscriptions.
+### 3. Round 2 Execution — Strategy Revision 2 (Correlation & Auth-First)
+![03 - Round 2 Correlation](screenshots/03-round2-correlation.png)
+*Teacher/Reviewer scores Round 1 evidence and evolves Revision 2, shifting focus to authentication and SQL injection testing. Progress score jumps to 72/100.*
 
-```bash
-# Environment configuration (.env)
-MUTEKI_MODE=real
-MUTEKI_WORKER_ENGINE=grok
-XAI_API_KEY=xai-your-api-key-here
-```
+---
 
-### 3. Muteki Web Engine Core (`vendor/muteki/apps/web/server.py`)
-Muteki's underlying FastAPI backend brokers the event bus and manages sandboxed worker execution while MUTeki-Evolve handles high-level strategic reasoning.
+### 4. Final Round — 100/100 Solved State & Verified Success
+![04 - Round 3 Solved State](screenshots/04-round3-solved.png)
+*Strategy Revision 3 verifies SQL injection hashes and captures victory condition. Investigation progress hits 100/100 (SOLVED).*
+
+---
+
+### 5. Backend Probe UI (`Launch Investigation` Target Control)
+![05 - Backend Probe UI](screenshots/05-backend-probe-ui.png)
+*Backend investigation launcher configuring target URL `http://testphp.vulnweb.com` with Max Iterations budget = 3.*
+
+---
+
+### 6. Isolated Sandbox Environment (Ubuntu VM via SSH)
+![06 - Isolated Ubuntu VM SSH Session](screenshots/06-ubuntu-vm-ssh.png)
+*VS Code Remote SSH session connected to isolated Ubuntu VM (`192.168.56.101`) with environment configuration (`MUTEKI_MODE=real`, `XAI_API_KEY`).*
+
+---
+
+### 7. Target Configuration & Assessment Bounds
+![07 - Target Configuration](screenshots/07-target-configuration.png)
+*Target URL setup ensuring execution stays within pre-approved sandbox boundaries.*
+
+---
+
+### 8. xAI Grok CLI Bridge (`tools/grok_cli.py`)
+![08 - Grok CLI Bridge Source Code](screenshots/08-grok-cli-bridge.png)
+*Project-owned zero-dependency CLI bridge (`tools/grok_cli.py`) routing Muteki solver prompts directly to xAI's REST API (`api.x.ai`).*
+
+---
+
+### 9. Muteki Engine Core Server (`vendor/muteki/apps/web/server.py`)
+![09 - Muteki Backend Server Code](screenshots/09-muteki-backend-server.png)
+*FastAPI web backend handling SSE event stream broadcasting, sandbox terminal WebSockets, and worker process lifecycle.*
+
+---
+
+### 10. Evidence Ledger & Score Evaluation Detail
+![10 - Evidence Ledger Solved Detail](screenshots/10-evidence-ledger-solved.png)
+*Detailed view of normalized evidence signals (Verified Condition 98/100, Resolution Signal 95/100) and evaluation output.*
 
 ---
 
