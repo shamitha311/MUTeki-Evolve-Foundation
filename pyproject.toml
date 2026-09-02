@@ -5,6 +5,10 @@ description = "Project-owned contracts and deterministic mocks for MUTeki-Evolve
 requires-python = ">=3.10"
 dependencies = [
     "pydantic>=2.7",
+    "httpx>=0.27.0",
+    "fastapi>=0.110.0",
+    "uvicorn>=0.28.0",
+    "sse-starlette>=2.0.0",
 ]
 
 [project.optional-dependencies]
