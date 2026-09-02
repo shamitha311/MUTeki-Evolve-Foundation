@@ -160,6 +160,67 @@ python -m orchestration.orchestrator
 
 ---
 
+## 💡 Deep-Dive: Why It's Needed, The Flow, What It Solves & Post-Solve Lifecycle
+
+### ❓ 1. Why Is It Needed?
+
+- **The Problem with Traditional Scanners**: Legacy scanners (ZAP, Nessus) use rigid, rule-based heuristics. They flood security teams with false positives and cannot reason through complex multi-step application logic.
+- **The Problem with Single-Prompt AI Agents**: Basic LLM scripts try to solve security tasks in a single prompt. When a command fails or hits a defense, the AI gets stuck in infinite loops, loses context, or hallucinates non-existent vulnerabilities.
+- **The MUTeki-Evolve Solution**: MUTeki-Evolve separates **Strategic Planning** from **Swarm Execution**. A higher-level AI Teacher evaluates normalized evidence after each round, while Muteki's low-level worker swarm handles real terminal execution in safe sandboxes.
+
+---
+
+### 🔄 2. The Complete End-to-End Flow
+
+```text
+  [Trusted Target Registered]
+              │
+              ▼
+   ┌──────────────────────┐
+   │ Strategy Generation  │ ◄─── Round 1: Reconnaissance-first
+   └──────────┬───────────┘
+              │
+              ▼
+   ┌──────────────────────┐
+   │   Muteki Swarm Run   │ ───► Grok Workers Execute Terminal Commands
+   └──────────┬───────────┘
+              │
+              ▼
+   ┌──────────────────────┐
+   │ Event Normalization  │ ───► Converts Raw Logs to Structured Evidence
+   └──────────┬───────────┘
+              │
+              ▼
+   ┌──────────────────────┐
+   │ Progress Evaluation  │ ───► Scores Progress (0-100%)
+   └──────────┬───────────┘
+              │
+              ├─── [Not Solved] ──► Teacher Evolving Next Strategy (Round 2+)
+              │
+              └─── [Solved (100/100)] ──► State Frozen & Verified
+```
+
+---
+
+### 🛡️ 3. What Problem Does It Solve?
+
+1. **Stall & Loop Elimination**: If a worker fails in Round 1, the Teacher analyzes the error and evolves Revision 2 to bypass the barrier.
+2. **Boundary Enforcement**: The system strictly enforces target boundaries—workers cannot touch outside IPs or non-registered hosts.
+3. **Structured Audit Trail**: Instead of messy console output, MUTeki-Evolve produces typed `Evidence` ledgers with confidence scores for every discovery.
+
+---
+
+### 🏁 4. What Happens After Solving? (100/100 Reached)
+
+When the progress score hits **100/100 (SOLVED)**:
+
+1. **Run State Freezing**: The orchestrator freezes the run state and marks `solved: true`.
+2. **Evidence Archiving**: The full strategy lineage (Revision A $\rightarrow$ B $\rightarrow$ C), raw event logs, and evidence ledgers are saved to `sessions/`.
+3. **Clean Swarm Teardown**: Worker processes (`grok`), sandbox PTY terminals, and temporary files are automatically shut down to prevent resource leaks.
+
+
+---
+
 ## 🧪 Verification & Test Suite
 
 MUTeki-Evolve comes with **293/293 passing unit & integration tests** and **5/5 passed execution gates**:
