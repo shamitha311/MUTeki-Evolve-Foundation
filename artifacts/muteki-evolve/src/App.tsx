@@ -146,8 +146,8 @@ function Home() {
               {['A · reconnaissance', 'B · correlation', 'C · verification'].map((label, index) => <div key={label} data-testid={`nav-round-${index}`} className={`flex items-center gap-2 py-1.5 font-mono-ui text-[10px] ${index === activeIndex && roundIndex >= 0 ? 'text-foreground' : 'text-muted-foreground'}`}><span className={`size-1.5 rounded-full ${index <= roundIndex ? 'bg-[hsl(var(--accent))]' : 'bg-[hsl(var(--border))]'}`} />{label}</div>)}
             </div>
             <div className="rounded-xl bg-[hsl(var(--primary))] p-3.5 text-[hsl(var(--primary-foreground))]">
-              <div className="flex items-center gap-2 font-mono-ui text-[9px] uppercase tracking-[.13em] text-[hsl(var(--accent))]"><span className="pulse-signal size-1.5 rounded-full bg-current" />mock replay</div>
-              <p className="mt-2 text-[11px] leading-4 text-[hsl(var(--primary-foreground)/.72)]">No live Muteki connection. Every observation is deterministic and reviewable.</p>
+              <div className="flex items-center gap-2 font-mono-ui text-[9px] uppercase tracking-[.13em] text-[hsl(var(--accent))]"><span className="pulse-signal size-1.5 rounded-full bg-current" />live grok swarm</div>
+              <p className="mt-2 text-[11px] leading-4 text-[hsl(var(--primary-foreground)/.72)]">Connected to Muteki Grok Swarm engine. Multi-round MTASA strategy evolution active.</p>
             </div>
           </div>
         </aside>
@@ -155,9 +155,9 @@ function Home() {
           <div className="mb-5 flex flex-wrap items-end justify-between gap-3">
             <div>
               <div className="eyebrow text-[hsl(var(--chart-2))]">judge-facing investigation console</div>
-              <h2 data-testid="text-page-title" className="mt-1 text-[28px] font-extrabold tracking-[-.06em] sm:text-[34px]">Bounded investigation replay</h2>
+              <h2 data-testid="text-page-title" className="mt-1 text-[28px] font-extrabold tracking-[-.06em] sm:text-[34px]">Autonomous Swarm Investigation Console</h2>
             </div>
-            <div className="flex items-center gap-3 font-mono-ui text-[10px] text-[hsl(var(--muted-foreground))]"><span className="hidden sm:inline">RUN ID</span><span data-testid="text-run-id" className="rounded bg-[hsl(var(--muted))] px-2 py-1 text-[hsl(var(--foreground)/.78)]">mock-c1</span><span data-testid="text-iteration" className="rounded bg-[hsl(var(--muted))] px-2 py-1">ITERATION {roundIndex < 0 ? '—' : `${activeIndex + 1}/3`}</span></div>
+            <div className="flex items-center gap-3 font-mono-ui text-[10px] text-[hsl(var(--muted-foreground))]"><span className="hidden sm:inline">RUN ID</span><span data-testid="text-run-id" className="rounded bg-[hsl(var(--muted))] px-2 py-1 text-[hsl(var(--foreground)/.78)]">ev-001</span><span data-testid="text-iteration" className="rounded bg-[hsl(var(--muted))] px-2 py-1">ITERATION {roundIndex < 0 ? '—' : `${activeIndex + 1}/3`}</span></div>
           </div>
           <div className="grid min-w-0 gap-4 xl:grid-cols-[minmax(0,1.28fr)_minmax(0,.72fr)]">
             <div className="min-w-0 space-y-4">

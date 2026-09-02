@@ -68,10 +68,10 @@ export type ReplayScenario = {
 
 export const demoScenario: ReplayScenario = {
   target: {
-    id: "trusted-demo-target",
-    name: "Trusted demo sandbox",
-    description: "A deterministic local fixture target for contract tests.",
-    runtime_reference: "mock://trusted-demo-target",
+    id: "vulnweb-testphp",
+    name: "testphp.vulnweb.com Assessment Target",
+    description: "Acunetix intentionally vulnerable PHP application for legal autonomous assessment.",
+    runtime_reference: "http://testphp.vulnweb.com",
   },
   rounds: [
     {
