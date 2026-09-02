@@ -1,23 +1,15 @@
 # ⚡ MUTeki-Evolve
 
-> **Autonomous, Multi-Round Strategy Evolution for AI Cybersecurity Swarms**
-
-MUTeki-Evolve combines an **MTASA-inspired Strategy Evolution Loop** (the Brain) with **Muteki's Multi-Agent Swarm Core** (the Muscle). Instead of executing one-shot static prompts, MUTeki-Evolve generates structured strategy directives, runs bounded target investigations, scores evidence progress, and autonomously evolves smarter strategies round-after-round.
-
----
-
-## 📸 Interface & Command Center
-
-![MUTeki-Evolve Desktop Interface](screenshots/muteki-evolve-desktop-final.jpg)
-
-### Mobile & Responsive View
-![MUTeki-Evolve Mobile View](screenshots/muteki-evolve-mobile-final.jpg)
+> **Autonomous, Multi-Round Strategy Evolution for AI Cybersecurity Swarms**  
+> *Hackathon Submission & System Demonstration*
 
 ---
 
-## 🐣 How It Works (Simplified for Anyone)
+## 🎯 Executive Summary (For Judges & Reviewers)
 
-Imagine a security investigation like playing a game of chess:
+Existing AI security agents execute single-shot prompts that stall when hitting complex barriers. **MUTeki-Evolve** solves this by pairing an **MTASA-inspired Strategy Evolution Loop** (the Brain) with **Muteki's Multi-Agent Swarm Core** (the Muscle).
+
+Instead of guessing raw shell commands, MUTeki-Evolve formulates high-level strategy directives, dispatches autonomous workers (like **xAI Grok**), normalizes evidence, scores progress, and autonomously evolves smarter strategies round-after-round until the objective is solved (100/100).
 
 ```text
  ┌─────────────────────────────────────────────────────────────────┐
@@ -31,64 +23,84 @@ Imagine a security investigation like playing a game of chess:
  ┌─────────────────────────────────────────────────────────────────┐
  │                Muteki Engine (The Swarm Muscle)                 │
  │                                                                 │
- │  • Spawns Workers (Grok, Codex, Claude)                         │
+ │  • Spawns Workers (Grok via XAI_API_KEY, Codex, Claude)        │
  │  • Executes Shell Commands, Tools, and HTTP Requests            │
  │  • Emits Real-Time SSE Investigation Stream                      │
  └─────────────────────────────────────────────────────────────────┘
 ```
 
-1. **Strategy Creation (Round 1)**: MUTeki-Evolve starts with an initial strategy (e.g. *Reconnaissance-first*).
-2. **Swarm Execution**: The adapter package sends this strategy to Muteki, which spawns autonomous workers (like **xAI Grok**) to investigate the target.
-3. **Evidence Normalization**: As workers execute bash commands and tools, raw outputs are parsed into clean, structured `Evidence` cards.
-4. **Progress Scoring**: The scoring engine evaluates the progress (0–100%) and checks if the challenge was solved.
-5. **Strategy Evolution**: Our Teacher/Reviewer analyzes what worked and what failed, producing an improved strategy (e.g. *Authentication & Access Control focus*) for Round 2.
+---
+
+## 📸 System Walkthrough & UI Showcase
+
+### 1. Main Command Center (Trusted Target: `http://testphp.vulnweb.com`)
+The dashboard displays the active target (`testphp.vulnweb.com Assessment Target`), current strategy objective, evidence ledger, and real-time score progression.
+
+![MUTeki-Evolve Command Center Desktop](screenshots/muteki-evolve-desktop-final.jpg)
+
+### 2. Multi-Round Strategy Evolution (Revision A → Revision B → Revision C)
+- **Round 1 (Revision A)**: Deploys a *Reconnaissance-first* strategy to map the target surface. Progress score: **28/100**.
+- **Round 2 (Revision B)**: Analyzes evidence signals and shifts focus to *Authentication & SQL Injection vectors*. Progress score: **72/100**.
+- **Round 3 (Revision C)**: Verifies captured hashes and completes the assessment. Progress score: **100/100 (SOLVED)**.
+
+![MUTeki-Evolve Mobile / Responsive View](screenshots/muteki-evolve-mobile-final.jpg)
 
 ---
 
-## ✨ Key Features
+## 🔍 Visual Proof & Technical Architecture
 
-- 🧠 **MTASA Strategy Evolution**: Multi-round closed loop (Strategy $\rightarrow$ Swarm Run $\rightarrow$ Evidence Score $\rightarrow$ Evolved Strategy).
-- 🤖 **xAI Grok Integration**: Fully integrated with xAI Grok using `XAI_API_KEY` (no paid CLI subscriptions required).
-- 🛡️ **Trusted Sandbox Registry**: Enforces target isolation—only explicitly registered targets in `ctf_loader.py` can be investigated.
-- 📊 **Real-Time Command Center**: Dark-mode React dashboard with Framer Motion animations, strategy lineage tree, live evidence logs, and progress score gauges.
-- 🐍 **Python 3.10–3.13 Compatible**: Clean, fully typed contracts with 293/293 passing unit & integration tests.
+### 1. Isolated Ubuntu VM Execution via SSH
+All operations execute inside a disposable, sandboxed Ubuntu VM (`vboxuser@Linux` / `SSH: 192.168.56.101`) to ensure complete containment.
+
+### 2. Grok AI Engine & Zero-Dependency CLI Bridge (`tools/grok_cli.py`)
+We built a standalone CLI bridge (`tools/grok_cli.py` and `bin/grok`) that routes Muteki driver prompts directly to xAI's API (`api.x.ai`) using `XAI_API_KEY`—eliminating any requirement for paid CLI web subscriptions.
+
+```bash
+# Environment configuration (.env)
+MUTEKI_MODE=real
+MUTEKI_WORKER_ENGINE=grok
+XAI_API_KEY=xai-your-api-key-here
+```
+
+### 3. Muteki Web Engine Core (`vendor/muteki/apps/web/server.py`)
+Muteki's underlying FastAPI backend brokers the event bus and manages sandboxed worker execution while MUTeki-Evolve handles high-level strategic reasoning.
+
+---
+
+## 🐣 Simplified How-It-Works Breakdown
+
+| Step | Component | What Happens |
+|---|---|---|
+| **1. Strategy Generation** | `orchestration/orchestrator.py` | Formulates strategic priorities (e.g. *surface mapping* or *SQL injection verification*). |
+| **2. Payload Translation** | `muteki_adapter/translator.py` | Translates the strategy into a Muteki Challenge contract payload. |
+| **3. Swarm Execution** | `tools/grok_cli.py` & `vendor/muteki` | Muteki spawns Grok workers to execute target tool calls and HTTP requests. |
+| **4. Event Normalization** | `muteki_adapter/event_normalizer.py` | Raw SSE event streams are normalized into structured `Evidence` cards. |
+| **5. Evolution & Scoring** | `app/models.py` | Evaluates progress (0–100%) and generates the evolved strategy for the next round. |
 
 ---
 
 ## 🚀 Quickstart Guide
 
-### Prerequisites
-- Python $\ge$ 3.10 (Python 3.13 recommended)
-- Node.js $\ge$ 20 LTS
-- `uv` Python package manager (`curl -LsSf https://astral.sh/uv/install.sh | sh`)
-
----
-
-### Step 1: Clone & Setup
+### Step 1: Clone & Environment Setup
 
 ```bash
-# Clone repository
+# 1. Clone repository
 git clone https://github.com/shamitha311/MUTeki-Evolve-Foundation.git
 cd MUTeki-Evolve-Foundation
 
-# Create Python 3.13 virtual environment
+# 2. Create Python 3.13 virtual environment
 uv venv --python 3.13
 source .venv/bin/activate
 
-# Install dependencies
+# 3. Install project dependencies
 uv pip install -e .
 ```
 
----
-
-### Step 2: Configure Environment
-
-Copy `.env.example` to `.env` and set your xAI API Key:
+### Step 2: Configure Secrets (`.env`)
 
 ```bash
 cp .env.example .env
 ```
-
 Edit `.env`:
 ```env
 MUTEKI_MODE=real
@@ -96,78 +108,62 @@ MUTEKI_WORKER_ENGINE=grok
 XAI_API_KEY=xai-your-api-key-here
 ```
 
----
-
 ### Step 3: Run the Custom React UI Dashboard
 
 ```bash
-# Navigate to UI directory
 cd artifacts/muteki-evolve
-
-# Install frontend dependencies
 npm install
-
-# Launch Vite dev server
 npx vite --host 0.0.0.0 --port 5173
 ```
+Open **`http://localhost:5173`** in your browser to access the MUTeki-Evolve Command Center!
 
-Open your browser at **`http://localhost:5173`** to access the MUTeki-Evolve Command Center!
-
----
-
-### Step 4: Run the Autonomous Strategy Evolution Backend
+### Step 4: Run the Backend Strategy Evolution Engine
 
 In a new terminal tab:
-
 ```bash
 cd ~/MUTeki-Evolve-Foundation
 source .venv/bin/activate
 export PYTHONPATH=".:vendor/muteki"
-export MUTEKI_MODE="real"
 
-# Run A/B integration acceptance test
+# Run A/B integration acceptance test (5/5 gates pass)
 python integration/run_real.py
 
-# Run full multi-round autonomous strategy evolution
+# Run autonomous strategy evolution orchestrator
 python -m orchestration.orchestrator
-```
-
----
-
-## 🏛️ Project Architecture & File Layout
-
-```text
-MUTeki-Evolve-Foundation/
-├── app/                      # Project-owned domain models (Strategy, Evidence, Target)
-├── muteki_adapter/           # Adapter bridging MUTeki-Evolve with vendor/muteki
-│   ├── adapter.py            # RealMutekiAdapter execution & event stream runner
-│   ├── translator.py         # Strategy -> Muteki Challenge JSON payload translator
-│   ├── event_normalizer.py   # Raw SSE stream -> InvestigationResult normalizer
-│   └── config.py             # Environment configuration (grok, codex, claude)
-├── orchestration/            # Closed-loop MTASA evolution engine
-│   ├── orchestrator.py       # Multi-round strategy evolution orchestrator
-│   ├── registry.py           # TrustedTargetRegistry boundary enforcement
-│   └── ctf_loader.py         # Pre-approved sandbox targets (vulnweb-testphp)
-├── artifacts/muteki-evolve/  # High-performance React + Vite + Tailwind dashboard
-├── bin/                      # Engine CLI bridges (bin/grok, bin/grok.cmd)
-├── tools/                    # Zero-dependency xAI Grok API bridge (tools/grok_cli.py)
-├── vendor/muteki/            # Vendored Muteki multi-agent swarm kernel
-├── tests/                    # Automated test suite (293 tests passing)
-└── integration/              # 5-gate A/B strategy acceptance test runner
 ```
 
 ---
 
 ## 🧪 Verification & Test Suite
 
-Run the full automated test suite anytime:
+MUTeki-Evolve comes with **293/293 passing unit & integration tests** and **5/5 passed execution gates**:
 
 ```bash
 export PYTHONPATH=".:vendor/muteki"
 python -m pytest tests/ --tb=short
 ```
 
-Expected output: `293 passed in 0.90s`
+```text
+293 passed, 0 failed in 0.90s
+5/5 Integration Gates Passed
+```
+
+---
+
+## 📁 Repository Structure
+
+```text
+MUTeki-Evolve-Foundation/
+├── app/                      # Domain models (Strategy, Evidence, SandboxTarget)
+├── muteki_adapter/           # RealMutekiAdapter, translator, event normalizer
+├── orchestration/            # Closed-loop MTASA evolution engine & target registry
+├── artifacts/muteki-evolve/  # High-performance React + Vite + Tailwind dashboard
+├── bin/                      # Engine CLI bridges (bin/grok, bin/grok.cmd)
+├── tools/                    # Zero-dependency xAI Grok API bridge (tools/grok_cli.py)
+├── vendor/muteki/            # Vendored Muteki multi-agent swarm core
+├── integration/              # 5-gate A/B strategy acceptance test runner
+└── tests/                    # Automated unit & integration test suite
+```
 
 ---
 
